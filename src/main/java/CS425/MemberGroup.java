@@ -119,7 +119,7 @@ public class MemberGroup {
         try {
             boolean append = true;
             PatternLayout pattern = new PatternLayout("[%-5p] %d{ISO8601} %c.class %t: %m %n");
-            RollingFileAppender fileAppender = new RollingFileAppender(pattern, "mp2_node.log");
+            RollingFileAppender fileAppender = new RollingFileAppender(pattern, "mp3_node.log");
             fileAppender.setLayout(pattern);
             fileAppender.setName("LogFile");
             fileAppender.setMaxFileSize("16MB");
@@ -273,7 +273,6 @@ public class MemberGroup {
     }
 
     /**
-     *
      * leave the group, inform all the other members
      * @throws IOException
      */
