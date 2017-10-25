@@ -109,7 +109,7 @@ public class SystemMain {
     public void putFile(String localfilename, String sdfsfilename){
         localFileName = localfilename;
         sdfsFileName = sdfsfilename;
-        FileSendThread put = new FileSendThread();
+        FileOperation put = new FileOperation();
         put.putFile(localFileName,sdfsFileName);
     }
 
@@ -119,7 +119,7 @@ public class SystemMain {
     public void getFile(String localfilename, String sdfsfilename){
         localFileName = localfilename;
         sdfsFileName = sdfsfilename;
-        FileSendThread get = new FileSendThread();
+        FileOperation get = new FileOperation();
         get.getFile(localFileName,sdfsFileName);
     }
     /**
@@ -127,7 +127,7 @@ public class SystemMain {
      */
     public void deleteFile(String sdfsfilename){
         sdfsFileName = sdfsfilename;
-        FileSendThread delete = new FileSendThread();
+        FileOperation delete = new FileOperation();
         delete.deleteFile(sdfsFileName);
 
     }
@@ -137,7 +137,8 @@ public class SystemMain {
      */
     public void listMember(String sdfsfilename){
         sdfsFileName = sdfsfilename;
-        FileSendThread list = new FileSendThread();
+        FileOperation list = new FileOperation();
+        //TODO
         String[] addresses = list.listMembers(sdfsFileName);
         System.out.println("File Name" + sdfsFileName + "is currently storing at addresses\n" + addresses);
     }
@@ -147,8 +148,9 @@ public class SystemMain {
      */
     public void listFiles(){
         String machineIp = MemberGroup.machineIp;
-        FileSendThread list = new FileSendThread();
+        FileOperation list = new FileOperation();
         String[] files = list.listFiles(machineIp);
+        //TODO
         System.out.println("The following files are stored at this machine:\n");
         System.out.println(files);
     }
