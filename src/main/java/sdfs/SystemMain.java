@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.lang.reflect.*;
+import java.util.ArrayList;
 
 
 /***
@@ -139,7 +140,7 @@ public class SystemMain {
         sdfsFileName = sdfsfilename;
         FileOperation list = new FileOperation();
         //TODO
-        String[] addresses = list.listMembers(sdfsFileName);
+        ArrayList<String> addresses = list.listMembers(sdfsFileName);
         System.out.println("File Name" + sdfsFileName + "is currently storing at addresses\n" + addresses);
     }
     /**
