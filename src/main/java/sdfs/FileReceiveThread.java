@@ -3,9 +3,15 @@ package sdfs;
 import membership.MemberGroup;
 import org.apache.log4j.Logger;
 
-import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Map;
@@ -20,60 +26,121 @@ import java.util.Random;
 public class FileReceiveThread extends Thread {
     public static Logger logger = Logger.getLogger(FileReceiveThread.class);
     public static int port = MemberGroup.receivePort;
-    public String IP;
-    private Random rand;
+    public String ip;
+    public Random rand;
+    public String currentIp;
+    public String[] message;
 
     public static ConcurrentHashMap<String, FileInfo> leaderFileList = new ConcurrentHashMap<String, FileInfo>();
 
     LeaderElection leader = new LeaderElection();
     String leaderIp = leader.getLeaderIp();
-    String machineIp;
-    String[] message;
+
+
+    public FileReceiveThread(String ip, String[] message) {
+        this.ip = ip;
+        this.message = message;
+        this.port = port;
+    }
 
     public void run(){
+
         try {
-            machineIp = InetAddress.getLocalHost().getHostAddress().toString();
+            currentIp = InetAddress.getLocalHost().getHostAddress().toString();
         } catch (UnknownHostException e) {
             logger.error(e);
             e.printStackTrace();
         }
-        while (true) {
+        if(isLeader()){
+            leaderFileOperation(this.message);
+        }else {
 
-            // receive operation message
-            byte[] receiveBuffer = new byte[2048];
-            try {
-                DatagramSocket receiveSocket = new DatagramSocket(port);
-                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-                receiveSocket.receive(receivePacket);
-
-                byte[] data = receivePacket.getData();
-                ByteArrayInputStream bytestream = new ByteArrayInputStream(data);
-                ObjectInputStream objInpStream = new ObjectInputStream(bytestream);
-                message = (String[]) objInpStream.readObject();
-
-                IP = receivePacket.getAddress().toString();
-
-                leaderOp(message);
-                //read or write the files according to ips
-                //TODO
-
-                receiveSocket.close();
-
-            } catch (SocketException e) {
-                e.printStackTrace();
-                logger.error(e);
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.error(e);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                logger.error(e);
-            }
+            fileOperation(this.message);
         }
 
     }
+    public void leaderFileOperation(String[] receivedmessage){
+        fileOperation(this.message);
+        if(receivedmessage[0].equalsIgnoreCase("put")||receivedmessage[0].equalsIgnoreCase("get")
+                ||receivedmessage[0].equalsIgnoreCase("delete")) {
+            leaderListOp(receivedmessage);
+        }
+    }
+    public void fileOperation(String[] receivedmessage){
+        Socket socket = null;
+        try {
+            socket = new Socket(this.ip, this.port);
+        } catch (IOException e) {
+            logger.info(e);
+        }
 
-    public ArrayList<String> leaderOp(String[] message){
+        if(receivedmessage[0].equalsIgnoreCase("send")){
+            try{
+                InputStream inputs = socket.getInputStream();
+                OutputStream outputs = socket.getOutputStream();
+                DataOutputStream dataOps = new DataOutputStream(outputs);
+                for(String m : this.message) {
+                    dataOps.writeUTF(m);
+                }
+                dataOps.flush();
+                File file= new File("/home//MP3/localfolder/" + this.message[1]);
+                // turn file into byte
+                byte[] bytefile = new byte[(int)file.length()];
+
+                FileInputStream fileInput = new FileInputStream(file);
+                BufferedInputStream bufferInput = new BufferedInputStream(fileInput);
+                DataInputStream dataInput = new DataInputStream(bufferInput);
+
+                dataInput.readFully(bytefile, 0, bytefile.length);
+                dataOps.writeLong((long)bytefile.length);
+                dataOps.write(bytefile, 0, bytefile.length);
+                dataOps.flush();
+                logger.info("Sent file :"+this.message[1]+"to"+this.ip);
+                socket.close();
+                return;
+            }catch (IOException e) {
+                logger.info(e);
+            }
+            } else if(receivedmessage[0].equalsIgnoreCase("receive")){
+            byte[] receivedFile = new byte[1024];
+            try{
+                InputStream inputs = socket.getInputStream();
+                OutputStream outputs = socket.getOutputStream();
+                DataOutputStream dataOps = new DataOutputStream(outputs);
+                for(String m : this.message) {
+                    dataOps.writeUTF(m);
+                }
+                dataOps.flush();
+
+                DataInputStream dataIps = new DataInputStream(inputs);
+                FileOutputStream fileOps = new FileOutputStream("/home/MP3/localfolder/" + this.message[1]);
+
+                int fileSize = dataIps.read(receivedFile,0,(int)Math.min((long)receivedFile.length, dataIps.readLong()));
+
+                fileOps.write(receivedFile,0,fileSize);
+               logger.info("File :" + this.message[1] + " received ");
+
+            }catch (IOException e) {
+                logger.info(e);
+            }
+
+            }else if(receivedmessage[0].equalsIgnoreCase("remove")){
+                try{
+                    OutputStream outputs = socket.getOutputStream();
+                    DataOutputStream dataOps = new DataOutputStream(outputs);
+                    for(String m : this.message) {
+                        dataOps.writeUTF(m);
+                    }
+                    dataOps.flush();
+                }catch (IOException e){
+                    logger.info(e);
+                }
+
+            }
+    }
+
+    public ArrayList<String> leaderListOp(String[] message){
+        //TODO only return the ips but not edit the file list yet
         ArrayList<String> selectedIps = null;
         ArrayList<String> ips = null;
         int index;
@@ -149,6 +216,19 @@ public class FileReceiveThread extends Thread {
                 return true;
             }
 
+        }
+        return false;
+    }
+    // check whether the current is master
+    public boolean isLeader(){
+        try {
+            String machineIp = InetAddress.getLocalHost().getHostAddress().toString();
+            if(machineIp == leaderIp ){
+                return true;
+            }
+        } catch (UnknownHostException e) {
+            logger.error(e);
+            e.printStackTrace();
         }
         return false;
     }
