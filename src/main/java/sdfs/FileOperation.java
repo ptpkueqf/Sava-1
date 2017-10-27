@@ -1,58 +1,69 @@
-package sdfs;
+package FilleSystem;
 
-import org.apache.log4j.Logger;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
-public class FileOperation {
-    public static Logger logger = Logger.getLogger(FileOperation.class);
-    public static String[] sendMessage;
-    LeaderElection leader = new LeaderElection();
-    String leaderIp = leader.getLeaderIp();
-    int leaderPort =  leader.getLeaderPort();
-    FileSendThread fst = new FileSendThread();
 
-    // send putfile request to the leader and get the ips for operation
-    public void putFile(String localfilename, String sdfsfilename) {
-        //call leader's file operation
-        //FileReceiveThread leaderPutFile = new FileReceiveThread();
-        sendMessage[0] = "put";
-        sendMessage[1] = localfilename;
-        sendMessage[2] = sdfsfilename;
-        fst.sendMessageOp(sendMessage);
+import Gossip.application;
 
-    }
-    // send getfile request to the leader and get the ips for operation
-    public void getFile(String localfilename, String sdfsfilename){
-        //call leader's file operation
-        //FileReceiveThread leaderGetFile = new FileReceiveThread();
-        sendMessage[0] = "get";
-        sendMessage[1] = localfilename;
-        sendMessage[2] = sdfsfilename;
-        fst.sendMessageOp(sendMessage);
-    }
-    // send deletefile request to the leader and get the ips for operation
-    public void deleteFile(String sdfsfilename){
-        //call leader's file operation
-        //FileReceiveThread leaderPutFile = new FileReceiveThread();
-        sendMessage[0] = "delete";
-        sendMessage[1] = sdfsfilename;
-        fst.sendMessageOp(sendMessage);
+public class FileListOperation {
 
-    }
-    // query the leader for listing all addresses storing the file and return addresses
-    public String[] listMembers(String sdfsfilename){
-        String[] addresses = null;
-        //call leader's file operation
-        //FileReceiveThread leaderPutFile = new FileReceiveThread();
-        sendMessage[0] = "listmembers";
-        sendMessage[1] = sdfsfilename;
-        addresses =fst.queryListOp(sendMessage);
-        return addresses;
-    }
-    // list all files storing in this machine and return file names
-    public String[] listFiles(String machineId){
-        String[] fileNames = null;
-        // TODO
-        return fileNames;
-    }
-
+	private Random rand;
+	
+	public FileListOperation()
+	{
+		rand = new Random();
+	}
+	private synchronized HashSet<String> getThreeNodes()
+	{
+		System.out.println("get three nodes called");
+		int index;
+		HashSet<String> selectedIp = new HashSet<String>();
+		if(application.activeNodes.size()>=3)
+		{
+		//	index = rand.nextInt(application.activeNodes.size());
+		do {			
+		index = rand.nextInt(application.activeNodes.size());
+		System.out.println("Reached inside the while loop for selecting the nodes");
+		selectedIp.add(application.activeNodes.get(index).getAddress());
+		}while(!(selectedIp.size() == 3));
+		}
+		else
+		{
+			System.out.println("Not enough nodes");
+		}
+		return selectedIp;
+	}
+	
+	public synchronized HashSet<String> putInsideFileList(String fileName)
+	{ 
+		
+		HashSet<String> listOfIpAddresses = getThreeNodes();
+		System.out.println("reached inside filelist put function");;
+		FileList newFileObj = new FileList(fileName,listOfIpAddresses);
+		application.fileList.add(newFileObj);
+		for(FileList fl:application.fileList)
+		{
+			System.out.println(fl.get_filename());
+			System.out.println(fl.getStoreAddress());
+		}
+		System.out.println(application.fileList);
+		return listOfIpAddresses;
+	}
+	
+	public synchronized HashSet<String> getFromFileList(String fileName)
+	{ 
+		
+		HashSet<String> listOfIpAddresses = new HashSet<String>();
+		for(FileList fileObj:application.fileList)
+		{
+			if(fileObj.get_filename().equalsIgnoreCase(fileName))
+			{
+				listOfIpAddresses = fileObj.getStoreAddress();
+			}
+		}		
+		return listOfIpAddresses;
+	}
 }
