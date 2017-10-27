@@ -1,69 +1,76 @@
-package FilleSystem;
+package sdfs;
+
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.io.IOException;
+import java.net.Socket;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ObjectInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 
 
-import Gossip.application;
+public class FileOperation {
+    public static Logger logger = Logger.getLogger(FileOperation.class);
+    public static String[] sendMessage;
+    FileSendThread fst = new FileSendThread();
 
-public class FileListOperation {
 
-	private Random rand;
-	
-	public FileListOperation()
-	{
-		rand = new Random();
-	}
-	private synchronized HashSet<String> getThreeNodes()
-	{
-		System.out.println("get three nodes called");
-		int index;
-		HashSet<String> selectedIp = new HashSet<String>();
-		if(application.activeNodes.size()>=3)
-		{
-		//	index = rand.nextInt(application.activeNodes.size());
-		do {			
-		index = rand.nextInt(application.activeNodes.size());
-		System.out.println("Reached inside the while loop for selecting the nodes");
-		selectedIp.add(application.activeNodes.get(index).getAddress());
-		}while(!(selectedIp.size() == 3));
-		}
-		else
-		{
-			System.out.println("Not enough nodes");
-		}
-		return selectedIp;
-	}
-	
-	public synchronized HashSet<String> putInsideFileList(String fileName)
-	{ 
-		
-		HashSet<String> listOfIpAddresses = getThreeNodes();
-		System.out.println("reached inside filelist put function");;
-		FileList newFileObj = new FileList(fileName,listOfIpAddresses);
-		application.fileList.add(newFileObj);
-		for(FileList fl:application.fileList)
-		{
-			System.out.println(fl.get_filename());
-			System.out.println(fl.getStoreAddress());
-		}
-		System.out.println(application.fileList);
-		return listOfIpAddresses;
-	}
-	
-	public synchronized HashSet<String> getFromFileList(String fileName)
-	{ 
-		
-		HashSet<String> listOfIpAddresses = new HashSet<String>();
-		for(FileList fileObj:application.fileList)
-		{
-			if(fileObj.get_filename().equalsIgnoreCase(fileName))
-			{
-				listOfIpAddresses = fileObj.getStoreAddress();
-			}
-		}		
-		return listOfIpAddresses;
-	}
+
+
+    // send putfile request to the leader and get the ips for operation
+    public void putFile(String localfilename, String sdfsfilename) {
+        ArrayList<String> ips;
+        sendMessage[0] = "put";
+        sendMessage[1] = localfilename;
+        sendMessage[2] = sdfsfilename;
+        ips = fst.queryForIps(sendMessage);
+
+        for(String ip:ips) {
+            sendMessage[0] = "send";
+            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        }
+
+
+    }
+    // send getfile request to the leader and get the ips for operation
+    public void getFile(String localfilename, String sdfsfilename){
+        ArrayList<String> ips;
+        sendMessage[0] = "get";
+        sendMessage[1] = localfilename;
+        sendMessage[2] = sdfsfilename;
+        ips = fst.queryForIps(sendMessage);
+        for(String ip:ips) {
+            sendMessage[0] = "receive";
+            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        }
+    }
+    // send deletefile request to the leader and get the ips for operation
+    public void deleteFile(String sdfsfilename){
+        ArrayList<String> ips;
+        sendMessage[0] = "delete";
+        sendMessage[1] = sdfsfilename;
+        ips = fst.queryForIps(sendMessage);
+        for(String ip:ips) {
+            sendMessage[0] = "remove";
+            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        }
+    }
+    // query the leader for listing all addresses storing the file and return addresses
+    public ArrayList<String> listMembers(String sdfsfilename){
+        ArrayList<String> ips;
+        sendMessage[0] = "listmembers";
+        sendMessage[1] = sdfsfilename;
+        ips =fst.queryForIps(sendMessage);
+        return ips;
+    }
+    // listall files storing in this machine and return file names
+    public String[] listFiles(String machineId){
+        String[] fileNames = null;
+        //TODO
+        return fileNames;
+    }
+
 }
