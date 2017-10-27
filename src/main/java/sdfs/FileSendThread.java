@@ -2,79 +2,71 @@ package sdfs;
 
 import org.apache.log4j.Logger;
 
-import java.io.*;
-import java.net.*;
+import java.util.ArrayList;
+import java.io.IOException;
+import java.net.Socket;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ObjectInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 
 /*** This class is used to send the file message to other nodes.
  * *
  */
 public class FileSendThread extends Thread{
-    public static Logger logger = Logger.getLogger(FileSendThread.class);
+    public static Logger logger = Logger.getLogger(FileOperation.class);
     public static String[] sendMessage;
+    private static int fileTransferPort = 4444;
     LeaderElection leader = new LeaderElection();
     String leaderIp = leader.getLeaderIp();
     int leaderPort =  leader.getLeaderPort();
-
-    public void run(){
-
+    FileSendThread fst = new FileSendThread();
+    public ArrayList<String> queryForIps(String[] message){
         //TODO
-    }
+        Socket socket;
+        boolean done;
 
-
-    // check whether the current is master
-    public boolean isLeader(){
+        ArrayList<String> returnIps = new ArrayList<String>();
         try {
-            String machineIp = InetAddress.getLocalHost().getHostAddress().toString();
-            if(machineIp == leaderIp ){
-                return true;
+            socket = new Socket(leaderIp,fileTransferPort);
+            InputStream inputs = socket.getInputStream();
+            OutputStream outputs = socket.getOutputStream();
+            //Sending message to the server
+            DataOutputStream dataos = new DataOutputStream(outputs);
+            for(String m : message) {
+                dataos.writeUTF(m);
             }
-        } catch (UnknownHostException e) {
-            logger.error(e);
-            e.printStackTrace();
-        }
-        return false;
-    }
+            ObjectInputStream objectis = new ObjectInputStream(inputs);
+            done = true;
 
-    public void sendMessageOp(String[] message){
-        //TODO
+            while(done)
+            {
+                try {
+                    Object readObject = objectis.readObject();
+                    returnIps = (ArrayList<String>)readObject;
+                    if(returnIps.size()>0)
+                    {
+                        done = false;
+                    }
+                }
+                catch (ClassNotFoundException e)
+                {
+                    done = false;
+                    logger.info("File doesn't exist in the system");
+                }
 
-        // if the current machine is leader, then it doesn't need to send message
-        if(isLeader()){
-            FileReceiveThread op = new FileReceiveThread();
-            op.leaderOp(message);
-        }else {
-            // send message to the leader
-            DatagramSocket socket = null;
-            try {
-                socket = new DatagramSocket();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-
-
-                objectOutputStream.writeObject(message);
-
-                byte[] buffer = byteArrayOutputStream.toByteArray();
-                int length = buffer.length;
-                DatagramPacket datagramPacket = new DatagramPacket(buffer, length);
-                datagramPacket.setAddress(InetAddress.getByName(leaderIp));
-                datagramPacket.setPort(leaderPort);
-
-                socket.send(datagramPacket);
-
-            } catch (SocketException e) {
-                e.printStackTrace();
-                logger.error(e);
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.error(e);
             }
+        } catch (IOException e) {
+            logger.info(e);
         }
+
+        return returnIps;
+
     }
-    public String[] queryListOp(String[] message){
-        //TODO
-        String[] list = null;
-        sendMessageOp(message);
-        return list;
-    }
+
+
+
+
 
 }
