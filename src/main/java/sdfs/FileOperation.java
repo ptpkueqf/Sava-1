@@ -2,23 +2,26 @@ package sdfs;
 
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.Socket;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.ObjectInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.sql.Time;
+import java.util.*;
 
 
 public class FileOperation {
     public static Logger logger = Logger.getLogger(FileOperation.class);
     public static String[] sendMessage;
-    FileSendThread fst = new FileSendThread();
+    RequestIp rp = new RequestIp();
+    private boolean outoftime = false;
 
 
-
+    private class outOfTime extends TimerTask {
+        public void run() {
+            System.out.println("Out of time! Please enter anything to exit!");
+            outoftime = true;
+        }
+    }
 
     // send putfile request to the leader and get the ips for operation
     public void putFile(String localfilename, String sdfsfilename) {
@@ -26,51 +29,119 @@ public class FileOperation {
         sendMessage[0] = "put";
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
-        ips = fst.queryForIps(sendMessage);
 
-        for(String ip:ips) {
-            sendMessage[0] = "send";
-            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        ips = rp.queryForIps(sendMessage);
+
+        if (ips.get(0).equals("judge")) {
+            System.out.println("Are you sure to update the file? [yes/no]");
+            long currenttime = System.currentTimeMillis();
+            Timer timer = new Timer();
+            timer.schedule(new outOfTime(), 30 * 1000);
+            outoftime = false;
+
+            while (true) {
+                InputStreamReader is_reader = new InputStreamReader(System.in);
+                String answer = "";
+                try {
+                    answer = new BufferedReader(is_reader).readLine();
+                } catch (IOException e) {
+                    logger.error(e);
+                    e.printStackTrace();
+                }
+
+                if (outoftime) {
+                    return;
+                }
+
+                // act accroding to member's action
+                if (answer.equalsIgnoreCase("yes")) {
+                    timer.cancel();
+                    break;
+                } else if (answer.equalsIgnoreCase("no")) {
+                    timer.cancel();
+                    System.out.println("You cancelled the put operation!");
+                    return;
+                } else {
+                    System.out.println("please enter the correct command!");
+                }
+            }
+            ips.remove(0);
         }
 
+//        //here, we use the quorums
+//        Set<Integer> set = new HashSet<Integer>();
+//        while (set.size() != (ips.size() / 2 + 1)) {
+//            int randomIndex = (int) (Math.random() * 3);
+//            set.add(randomIndex);
+//        }
 
+        //we need to judge whether ips contains my own ip
+
+        for (String str : ips) {
+            FileClientThread ftc1 = new FileClientThread(str, sendMessage);
+            ftc1.start();
+        }
     }
+
     // send getfile request to the leader and get the ips for operation
-    public void getFile(String localfilename, String sdfsfilename){
+    public void getFile(String localfilename, String sdfsfilename) {
         ArrayList<String> ips;
         sendMessage[0] = "get";
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
-        ips = fst.queryForIps(sendMessage);
-        for(String ip:ips) {
-            sendMessage[0] = "receive";
-            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        ips = rp.queryForIps(sendMessage);
+
+
+
+        //here, we use the quorums, here, we need to ensure the total ordering
+//        Set<Integer> set = new HashSet<Integer>();
+//        while (set.size() != (ips.size() / 2 + 1)) {
+//            int randomIndex = (int) (Math.random() * 3);
+//            set.add(randomIndex);
+//        }
+
+        //we need to judge whether ips contains my own ip
+        if (ips.size() != 0) {
+            for (String str : ips) {
+                FileClientThread ftc2 = new FileClientThread(str, sendMessage);
+                ftc2.start();
+            }
         }
     }
+
     // send deletefile request to the leader and get the ips for operation
-    public void deleteFile(String sdfsfilename){
+    public void deleteFile(String sdfsfilename) {
         ArrayList<String> ips;
         sendMessage[0] = "delete";
         sendMessage[1] = sdfsfilename;
-        ips = fst.queryForIps(sendMessage);
-        for(String ip:ips) {
-            sendMessage[0] = "remove";
-            FileReceiveThread ftc = new FileReceiveThread(ip, sendMessage);
+        ips = rp.queryForIps(sendMessage);
+
+        if (ips.size() != 0) {
+            for (String ip : ips) {
+                FileClientThread ftc = new FileClientThread(ip, sendMessage);
+            }
         }
     }
+
     // query the leader for listing all addresses storing the file and return addresses
-    public ArrayList<String> listMembers(String sdfsfilename){
+    public ArrayList<String> listMembers(String sdfsfilename) {
         ArrayList<String> ips;
         sendMessage[0] = "listmembers";
         sendMessage[1] = sdfsfilename;
-        ips =fst.queryForIps(sendMessage);
+        ips = rp.queryForIps(sendMessage);
         return ips;
     }
-    // listall files storing in this machine and return file names
-    public String[] listFiles(String machineId){
-        String[] fileNames = null;
-        //TODO
-        return fileNames;
-    }
+
+
+//    // listall files storing in this machine and return file names
+//    public String[] listFiles(String machineId) {
+//
+//        String[] fileNames = null;
+//
+//
+//
+//        //TODO
+//        return fileNames;
+//    }
 
 }
