@@ -23,7 +23,7 @@ public class RequestIp {
 
     String leaderIp = leader.getLeaderIp();
     //int leaderPort =  leader.getLeaderPort();
-    RequestIp fst = new RequestIp();
+    //RequestIp fst = new RequestIp();
 
     public ArrayList<String> queryForIps(String[] message){
         //TODO
@@ -38,13 +38,16 @@ public class RequestIp {
             //Sending message to the server
             DataOutputStream dataos = new DataOutputStream(outputs);
 
-            dataos.writeUTF("query_");
+            String UTF = "query_";
+
             for (int i = 0; i < message.length; i++) {
-                dataos.writeUTF(message[i]);
+                UTF += message[i];
                 if (i != message.length - 1) {
-                    dataos.writeUTF("_");
+                    UTF += "_";
                 }
             }
+
+            dataos.writeUTF(UTF);
             dataos.flush();
 
             ObjectInputStream objects = new ObjectInputStream(inputs);

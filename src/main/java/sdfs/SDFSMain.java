@@ -30,7 +30,7 @@ public class SDFSMain {
     private static String sdfsFileName;
     public static ConcurrentHashMap<String, FileInfo> leaderFileList = new ConcurrentHashMap<String, FileInfo>();
     public static MemberGroup memberGroup = new MemberGroup();
-    public String SDFSADDRESS = "/home/shaowen2/MP3/localfolder";
+    public static String SDFSADDRESS = "/Users/wsw/Desktop/sdfsfile";
     public boolean rejoin = false;
 
     public static int socketPort = 4444;
@@ -43,7 +43,6 @@ public class SDFSMain {
         return;
     }
 
-
     private void start() {
 
         try {
@@ -53,7 +52,7 @@ public class SDFSMain {
         }
 
         //start the grep server for grep query
-        new GrepServer("8090").start();
+        //new GrepServer("8090").start();
 
         MemberGroup.logEntry();
 
@@ -65,7 +64,7 @@ public class SDFSMain {
         System.out.println("\nEnter 'membership' to modify the membership group");
         System.out.println("\nEnter 'id' to show the membership id");
         System.out.println("\nEnter 'leave' to leave the system");
-        System.out.println("\nEnter 'grep' and queries to grep\n");
+        //System.out.println("\nEnter 'grep' and queries to grep\n");
         System.out.println("\nEnter 'put localfilename sdfsfilename' to insert or update the file");
         System.out.println("\nEnter 'get sdfsfilename localfilename' to get the file from the SDFS");
         System.out.println("\nEnter 'delete sdfsfilename' to delete the file from the SDFS");
@@ -104,7 +103,7 @@ public class SDFSMain {
             } else if (memberAction[0].equalsIgnoreCase("leave")) {
                 File file = new File(SDFSADDRESS);
                 rejoin = true;
-                deleteDir(file);
+                deleteDir(file, 0);
 
                 memberGroup.leaveGroup();
             } else if (memberAction[0].equalsIgnoreCase("grep")) {
@@ -125,7 +124,7 @@ public class SDFSMain {
     public void joinSystem() {
 
         File file = new File(SDFSADDRESS);
-        deleteDir(file);
+        deleteDir(file, 0);
         memberGroup.joinGroup();
         //start the file sever thread if it's not rejoin
         if (!rejoin) {
@@ -134,6 +133,8 @@ public class SDFSMain {
         }
 
         if (!rejoin && localIP.equals(new LeaderElection().getLeaderIp())) {
+
+            System.out.println("start the re-replicate!");
 
             ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
             //before send heartbeat, set to detect the failure regularly
@@ -149,16 +150,19 @@ public class SDFSMain {
      * @param dir
      * @return
      */
-    private static boolean deleteDir(File dir) {
+    private static boolean deleteDir(File dir, int depth) {
         if (dir.isDirectory()) {
             String[] children = dir.list();
 
             for (int i = 0; i < children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
+                boolean success = deleteDir(new File(dir, children[i]), depth + 1);
                 if (!success) {
                     return false;
                 }
             }
+        }
+        if (depth == 0) {
+            return true;
         }
         return dir.delete();
     }
@@ -214,6 +218,7 @@ public class SDFSMain {
         sdfsFileName = sdfsfilename;
         FileOperation put = new FileOperation();
         put.putFile(localFileName, sdfsFileName);
+
     }
 
     /**

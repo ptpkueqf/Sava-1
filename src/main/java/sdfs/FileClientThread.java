@@ -30,7 +30,7 @@ public class FileClientThread extends Thread {
     public Random rand;
     public String currentIp;
     public String[] message;
-    private String LOCALADDRESS = "/home/shaowen2/mp2/localfolder/";
+    private String LOCALADDRESS = "/Users/wsw/Desktop/localfile/";
 
 
 
@@ -82,16 +82,20 @@ public class FileClientThread extends Thread {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
 
+                String UTF = "";
                 for (int i = 0; i < message.length; i++) {
-                    dataOps.writeUTF(message[i]);
+                    UTF += message[i];
                     if (i != message.length - 1) {
-                        dataOps.writeUTF("_");
+                        UTF += "_";
                     }
                 }
+                dataOps.writeUTF(UTF);
 
                 dataOps.flush();
 
-                File file = new File(LOCALADDRESS + this.message[1]);
+                File file = new File(LOCALADDRESS + message[2]);
+
+                System.out.println("get file from" + LOCALADDRESS + message[2]);
                 // turn file into byte
                 byte[] bytefile = new byte[(int) file.length()];
 
@@ -107,6 +111,7 @@ public class FileClientThread extends Thread {
                 socket.close();
                 return;
             } catch (IOException e) {
+                System.out.println(e);
                 logger.info(e);
             }
         } else if (receivedmessage[0].equalsIgnoreCase("get")) {
@@ -115,12 +120,15 @@ public class FileClientThread extends Thread {
                 InputStream inputs = socket.getInputStream();
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
+
+                String UTF = "";
                 for (int i = 0; i < message.length; i++) {
-                    dataOps.writeUTF(message[i]);
+                    UTF += message[i];
                     if (i != message.length - 1) {
-                        dataOps.writeUTF("_");
+                        UTF += "_";
                     }
                 }
+                dataOps.writeUTF(UTF);
                 dataOps.flush();
 
                 DataInputStream dataIps = new DataInputStream(inputs);
@@ -138,13 +146,17 @@ public class FileClientThread extends Thread {
             try {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
+
+                String UTF = "";
                 for (int i = 0; i < message.length; i++) {
-                    dataOps.writeUTF(message[i]);
+                    UTF += message[i];
                     if (i != message.length - 1) {
-                        dataOps.writeUTF("_");
+                        UTF += "_";
                     }
                 }
+                dataOps.writeUTF(UTF);
                 dataOps.flush();
+
             } catch (IOException e) {
                 logger.info(e);
             }
@@ -152,13 +164,17 @@ public class FileClientThread extends Thread {
             try {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
+
+                String UTF = "";
                 for (int i = 0; i < message.length; i++) {
-                    dataOps.writeUTF(message[i]);
+                    UTF += message[i];
                     if (i != message.length - 1) {
-                        dataOps.writeUTF("_");
+                        UTF += "_";
                     }
                 }
+                dataOps.writeUTF(UTF);
                 dataOps.flush();
+
             } catch (IOException e) {
                 logger.info(e);
             }

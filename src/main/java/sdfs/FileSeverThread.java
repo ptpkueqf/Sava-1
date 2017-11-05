@@ -17,7 +17,7 @@ public class FileSeverThread extends Thread {
 
     //private Socket socket;
     public static Logger logger = Logger.getLogger(FileOperation.class);
-    private String SDFSADDRESS = "/home/shaowen2/mp2/sdfsfolder/";
+    private String SDFSADDRESS = SDFSMain.SDFSADDRESS + "/";
 
 
     public void run() {
@@ -46,15 +46,25 @@ public class FileSeverThread extends Thread {
                 String[] ops = message.split("_");
                 String type = ops[0];
 
+                System.out.println("FileSeverThread ops size :" + ops.length);
+
                 if (type.equalsIgnoreCase("put")) {
 
                     int bytesRead;
                     String filename = ops[2];
-                    OutputStream out = new FileOutputStream(SDFSADDRESS + filename);
+
+                    File outputfile = new File (SDFSADDRESS + filename);
+                    outputfile.createNewFile(); //if exists, do nothing
+                    OutputStream out = new FileOutputStream(outputfile);
+
+
                     long size = inputMessage.readLong();
+
+                    System.out.println("InputMessage size : " + size);
+
                     byte[] buffer = new byte[1024];
                     while (size > 0 && (bytesRead = inputMessage.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
-                        output.write(buffer, 0, bytesRead);
+                        out.write(buffer, 0, bytesRead);
                         size -= bytesRead;
                     }
 

@@ -11,7 +11,7 @@ import java.util.*;
 
 public class FileOperation {
     public static Logger logger = Logger.getLogger(FileOperation.class);
-    public static String[] sendMessage;
+    //public static String[] sendMessage;
     RequestIp rp = new RequestIp();
     private boolean outoftime = false;
 
@@ -26,6 +26,7 @@ public class FileOperation {
     // send putfile request to the leader and get the ips for operation
     public void putFile(String localfilename, String sdfsfilename) {
         ArrayList<String> ips;
+        String[] sendMessage = new String[3];
         sendMessage[0] = "put";
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
@@ -86,6 +87,7 @@ public class FileOperation {
     // send getfile request to the leader and get the ips for operation
     public void getFile(String localfilename, String sdfsfilename) {
         ArrayList<String> ips;
+        String[] sendMessage = new String[3];
         sendMessage[0] = "get";
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
@@ -112,6 +114,7 @@ public class FileOperation {
     // send deletefile request to the leader and get the ips for operation
     public void deleteFile(String sdfsfilename) {
         ArrayList<String> ips;
+        String[] sendMessage = new String[2];
         sendMessage[0] = "delete";
         sendMessage[1] = sdfsfilename;
         ips = rp.queryForIps(sendMessage);
@@ -126,6 +129,7 @@ public class FileOperation {
     // query the leader for listing all addresses storing the file and return addresses
     public ArrayList<String> listMembers(String sdfsfilename) {
         ArrayList<String> ips;
+        String[] sendMessage = new String[2];
         sendMessage[0] = "listmembers";
         sendMessage[1] = sdfsfilename;
         ips = rp.queryForIps(sendMessage);
