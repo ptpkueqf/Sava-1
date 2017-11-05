@@ -122,6 +122,7 @@ public class FileOperation {
         if (ips.size() != 0) {
             for (String ip : ips) {
                 FileClientThread ftc = new FileClientThread(ip, sendMessage);
+                ftc.start();
             }
         }
     }

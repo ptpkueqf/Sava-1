@@ -76,7 +76,7 @@ public class FileClientThread extends Thread {
             logger.info(e);
         }
 
-        if (receivedmessage[0].equalsIgnoreCase("put")) {
+        if (receivedmessage[0].equalsIgnoreCase("put") || receivedmessage[0].equalsIgnoreCase("put_re")) {
             try {
                 InputStream inputs = socket.getInputStream();
                 OutputStream outputs = socket.getOutputStream();
@@ -93,9 +93,15 @@ public class FileClientThread extends Thread {
 
                 dataOps.flush();
 
-                File file = new File(LOCALADDRESS + message[2]);
+                File file;
+                if (receivedmessage[0].equalsIgnoreCase("put")) {
+                    file = new File(LOCALADDRESS + message[2]);
+                    System.out.println("get file from" + LOCALADDRESS + message[2]);
+                } else {
+                    file = new File(SDFSMain.SDFSADDRESS + "/" + message[2]);
+                }
 
-                System.out.println("get file from" + LOCALADDRESS + message[2]);
+
                 // turn file into byte
                 byte[] bytefile = new byte[(int) file.length()];
 
@@ -115,7 +121,7 @@ public class FileClientThread extends Thread {
                 logger.info(e);
             }
         } else if (receivedmessage[0].equalsIgnoreCase("get")) {
-            byte[] receivedFile = new byte[1024];
+
             try {
                 InputStream inputs = socket.getInputStream();
                 OutputStream outputs = socket.getOutputStream();
@@ -131,12 +137,27 @@ public class FileClientThread extends Thread {
                 dataOps.writeUTF(UTF);
                 dataOps.flush();
 
-                DataInputStream dataIps = new DataInputStream(inputs);
-                FileOutputStream fileOps = new FileOutputStream(LOCALADDRESS + this.message[1]);
+                DataInputStream input = new DataInputStream(inputs);
 
-                int fileSize = dataIps.read(receivedFile, 0, (int) Math.min((long) receivedFile.length, dataIps.readLong()));
+                File outputfile = new File (LOCALADDRESS + message[2]);
+                outputfile.createNewFile(); //if exists, do nothing
+                FileOutputStream out = new FileOutputStream(outputfile);
 
-                fileOps.write(receivedFile, 0, fileSize);
+                byte[] buffer = new byte[1024];
+                long size = input.readLong();
+
+                System.out.println("get file size : " + size);
+
+                int bytesRead;
+                while (size > 0 && (bytesRead = input.read(buffer, 0, (int) Math.min(buffer.length, size))) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                    size -= bytesRead;
+                }
+
+                out.close();
+                input.close();
+                socket.close();
+
                 logger.info("File :" + this.message[1] + " received ");
 
             } catch (IOException e) {

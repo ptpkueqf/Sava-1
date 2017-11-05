@@ -60,6 +60,7 @@ public class FileSeverThread extends Thread {
 
                     long size = inputMessage.readLong();
 
+
                     System.out.println("InputMessage size : " + size);
 
                     byte[] buffer = new byte[1024];
@@ -110,7 +111,7 @@ public class FileSeverThread extends Thread {
 
                 } else if (type.equalsIgnoreCase("replicate")) {
                     String[] newmessage = new String[3];
-                    newmessage[0] = "put";
+                    newmessage[0] = "put_re";
                     newmessage[1] = "fixed";
                     newmessage[2] = ops[2];
 
