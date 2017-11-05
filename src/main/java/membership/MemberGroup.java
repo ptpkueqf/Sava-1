@@ -1,4 +1,4 @@
-package CS425;
+package membership;
 
 
 import grep.GrepClient;
@@ -179,6 +179,7 @@ public class MemberGroup {
      * @throws IOException
      */
     public void listMemberId() {
+
         System.out.println("Your id is :"+machineId);
         logger.info("The member "+ machineId +"is viewing its id.");
     }
@@ -191,6 +192,13 @@ public class MemberGroup {
      * @throws IOException
      */
     public void joinGroup() {
+
+        try {
+            machineIp = InetAddress.getLocalHost().getHostAddress().toString();
+        } catch (UnknownHostException e) {
+            logger.error(e);
+            e.printStackTrace();
+        }
 
         receiveFlag = true;
         machineId = machineIp + " " +System.currentTimeMillis();
@@ -277,6 +285,8 @@ public class MemberGroup {
      * @throws IOException
      */
     public void leaveGroup() {
+
+
 
         for (Entry<String, MemberInfo> entry : membershipList.entrySet()) {
             MemberInfo member = entry.getValue();

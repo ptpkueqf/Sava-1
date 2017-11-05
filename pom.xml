@@ -15,7 +15,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>CS425.MemberGroup</mainClass>
+                            <mainClass>membership.MemberGroup</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

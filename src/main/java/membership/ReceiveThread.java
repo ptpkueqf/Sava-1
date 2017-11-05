@@ -1,4 +1,4 @@
-package CS425;
+package membership;
 
 
 
@@ -253,6 +253,8 @@ public class ReceiveThread extends Thread{
             MemberGroup.membershipList.get(ID).setIsActive(false);
             //set the scannable to false
             MemberGroup.membershipList.get(ID).setScannable(false);
+
+
         }
 
         /**

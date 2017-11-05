@@ -108,7 +108,9 @@ public class SDFSMain {
 
                 memberGroup.leaveGroup();
             } else if (memberAction[0].equalsIgnoreCase("grep")) {
+
                 GrepClient.grep(memberAction);
+
             } else {
                 System.out.println("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
                 logger.info("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");

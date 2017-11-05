@@ -1,4 +1,4 @@
-package CS425;
+package membership;
 
 import java.io.Serializable;
 

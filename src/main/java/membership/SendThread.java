@@ -1,8 +1,7 @@
-package CS425;
+package membership;
 
 import org.apache.log4j.Logger;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
