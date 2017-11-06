@@ -3,6 +3,8 @@ package membership;
 
 
 import org.apache.log4j.Logger;
+import sdfs.LeaderElection;
+import sdfs.ReReplicate;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -11,6 +13,9 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /*** This class is used to receive the message from other nodes.
  *
@@ -250,11 +255,26 @@ public class ReceiveThread extends Thread{
          * @param ID
          */
         private void receiveDisseminate(String ID) {
+
+            //here add some judege to deal with SDFS leader judge.
+            String prevLeader = new LeaderElection().getLeaderIp();
+
             MemberGroup.membershipList.get(ID).setIsActive(false);
             //set the scannable to false
             MemberGroup.membershipList.get(ID).setScannable(false);
 
+            String curLeader = new LeaderElection().getLeaderIp();
 
+            if (!curLeader.equals(prevLeader) && MemberGroup.machineIp.equals(curLeader)) {
+
+                ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
+                //before send heartbeat, set to detect the failure regularly
+                //logger.info("Start the failure detection thread.");
+                System.out.println("start replicating!");
+                ReReplicate reReplicate = new ReReplicate();
+                sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
+
+            }
         }
 
         /**

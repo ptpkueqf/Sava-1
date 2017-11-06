@@ -177,7 +177,7 @@ public class FileSeverThread extends Thread {
                 logger.info("Can't get! The file doesn't exit!");
             }
             //when the file doesn't exist, do nothing, just return the empty ip list
-        } else if (message[1].equalsIgnoreCase("delete")) {
+        } else if (message[1].equalsIgnoreCase("delete") || message[1].equalsIgnoreCase("listmembers")) {
             //check whether the file is in the filelist
             if (checkExist(message[2])) {
                 //return 3 ips to delete the file
@@ -197,6 +197,7 @@ public class FileSeverThread extends Thread {
                 logger.info("The file doesn't exist!");
             }
         }
+
         return selectedIps;
     }
 

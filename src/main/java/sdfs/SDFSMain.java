@@ -36,6 +36,8 @@ public class SDFSMain {
     public static int socketPort = 4444;
     public static String localIP;
 
+    public static String curLeader;
+
     public static void main(String[] args) {
 
         SDFSMain sdfsMain = new SDFSMain();
@@ -50,6 +52,8 @@ public class SDFSMain {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
+
+        curLeader = new LeaderElection().getLeaderIp();
 
         //start the grep server for grep query
         //new GrepServer("8090").start();
@@ -138,10 +142,9 @@ public class SDFSMain {
 
             ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
             //before send heartbeat, set to detect the failure regularly
-            logger.info("Start the failure detection thread.");
+            //logger.info("Start the failure detection thread.");
             ReReplicate reReplicate = new ReReplicate();
             sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
-
         }
 
     }
@@ -269,7 +272,10 @@ public class SDFSMain {
 
         //TODO
         System.out.println("The following files are stored at this machine:\n");
-        System.out.println(files);
+        for (int i = 0; i < files.length; i++) {
+            System.out.print("[" + files[i] + "] ");
+        }
+
     }
 
 }

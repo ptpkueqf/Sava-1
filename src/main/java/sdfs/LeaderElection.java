@@ -19,6 +19,8 @@ public class LeaderElection {
     private static String Leader2 = "10.195.9.90";
     private static String Leader3 = "";
 
+
+
     // get the current Leader IP
     public String getLeaderIp(){
         Map<String, MemberInfo> maps = MemberGroup.membershipList;
@@ -32,18 +34,28 @@ public class LeaderElection {
             }
         }
 
+        String currentLeader;
+
         System.out.println("out of loop");
         System.out.println("alive servers" + aliveServers);
         if (aliveServers.contains(Leader1)) {
-            return Leader1;
+            currentLeader = Leader1;
         } else if (aliveServers.contains(Leader2)) {
-            return Leader2;
+            currentLeader = Leader2;
         } else if (aliveServers.contains(Leader3)){
-            return Leader3;
+            currentLeader = Leader3;
         } else {
             return null;
         }
+
+        if (SDFSMain.curLeader != null && SDFSMain.curLeader != currentLeader) {
+
+        }
+
+        return currentLeader;
     }
+
+
 
     public ArrayList<String> getAliveLeaders() {
         Map<String, MemberInfo> maps = MemberGroup.membershipList;

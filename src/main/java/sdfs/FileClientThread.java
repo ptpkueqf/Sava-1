@@ -82,8 +82,8 @@ public class FileClientThread extends Thread {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
 
-                String UTF = "";
-                for (int i = 0; i < message.length; i++) {
+                String UTF = "put_";
+                for (int i = 1; i < message.length; i++) {
                     UTF += message[i];
                     if (i != message.length - 1) {
                         UTF += "_";
