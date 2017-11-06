@@ -10,8 +10,8 @@ import java.io.OutputStream;
 import java.io.ObjectInputStream;
 import java.io.DataOutputStream;
 
-/*** This class is used to send the file message to other nodes.
- * *
+/**
+ *  This class is used to send the Ip reuqest  message to master
  */
 public class RequestIp {
     public static Logger logger = Logger.getLogger(FileOperation.class);
@@ -25,6 +25,11 @@ public class RequestIp {
     //int leaderPort =  leader.getLeaderPort();
     //RequestIp fst = new RequestIp();
 
+    /**
+     * query ips from mater
+     * @param message
+     * @return queried ips
+     */
     public ArrayList<String> queryForIps(String[] message){
         //TODO
         Socket socket;
@@ -52,25 +57,15 @@ public class RequestIp {
 
             ObjectInputStream objects = new ObjectInputStream(inputs);
 
-//            done = true;
-//            while(done)
-//            {
                 try {
                     Object readObject = objects.readObject();
                     returnIps = (ArrayList<String>)readObject;
-//                    if(returnIps.size()>0)
-//                    {
-//                        done = false;
-//                    }
                 }
                 catch (ClassNotFoundException e)
                 {
-                    done = false;
                     logger.info("..........");
                 }
-
                 socket.close();
-
         } catch (IOException e) {
             logger.info(e);
         }

@@ -30,9 +30,7 @@ public class FileClientThread extends Thread {
     public Random rand;
     public String currentIp;
     public String[] message;
-    private String LOCALADDRESS = "/Users/wsw/Desktop/localfile/";
-
-
+    private String LOCALADDRESS = "/home/shaowen2/mp3/local/";
 
     LeaderElection leader = new LeaderElection();
     String leaderIp = leader.getLeaderIp();
@@ -45,29 +43,14 @@ public class FileClientThread extends Thread {
 
     public void run() {
 
-//        try {
-//            currentIp = InetAddress.getLocalHost().getHostAddress().toString();
-//        } catch (UnknownHostException e) {
-//            logger.error(e);
-//            e.printStackTrace();
-//        }
-//        if(isLeader()){
-//            leaderFileOperation(this.message);
-//        }else {
-
         fileOperation(this.message);
 
-//        }
-
     }
-//    public void leaderFileOperation(String[] receivedmessage){
-//        fileOperation(this.message);
-//        if(receivedmessage[0].equalsIgnoreCase("put")||receivedmessage[0].equalsIgnoreCase("get")
-//                ||receivedmessage[0].equalsIgnoreCase("delete")) {
-//            leaderListOp(receivedmessage);
-//        }
-//    }
 
+    /**
+     * client file operation
+     * @param receivedmessage
+     */
     public void fileOperation(String[] receivedmessage) {
         Socket socket = null;
         try {
@@ -76,7 +59,9 @@ public class FileClientThread extends Thread {
             logger.info(e);
         }
 
+
         if (receivedmessage[0].equalsIgnoreCase("put") || receivedmessage[0].equalsIgnoreCase("put_re")) {
+            //deal with normal put operation and replicate put operaton
             try {
                 InputStream inputs = socket.getInputStream();
                 OutputStream outputs = socket.getOutputStream();
@@ -121,7 +106,7 @@ public class FileClientThread extends Thread {
                 logger.info(e);
             }
         } else if (receivedmessage[0].equalsIgnoreCase("get")) {
-
+            //deal with get operation
             try {
                 InputStream inputs = socket.getInputStream();
                 OutputStream outputs = socket.getOutputStream();
@@ -164,6 +149,7 @@ public class FileClientThread extends Thread {
                 logger.info(e);
             }
         } else if (receivedmessage[0].equalsIgnoreCase("delete")) {
+            //deal with delete operation
             try {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
@@ -182,6 +168,7 @@ public class FileClientThread extends Thread {
                 logger.info(e);
             }
         } else if (receivedmessage[0].equalsIgnoreCase("replicate")) {
+            //deal with replicate operation
             try {
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);

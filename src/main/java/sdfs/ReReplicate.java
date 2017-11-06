@@ -53,6 +53,7 @@ public class ReReplicate extends Thread{
             }
         }
 
+        //arrange the replication tasks for other nodes
         Collections.sort(aliveSevers);
         for (Map.Entry<String, FileInfo> entry : leaderFileList.entrySet()) {
             ArrayList<String> ips = new ArrayList<String>(entry.getValue().getIps());
@@ -114,7 +115,7 @@ public class ReReplicate extends Thread{
             }
         }
 
-        //then, we need to share the updated leaderfilelist if necessary
+        //then, if the filelist changed, we need to share the updated filelist to other potential masters.
         if (filelistChanged) {
             SDFSMain.shareFileList();
         }

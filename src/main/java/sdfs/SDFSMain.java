@@ -30,7 +30,7 @@ public class SDFSMain {
     private static String sdfsFileName;
     public static ConcurrentHashMap<String, FileInfo> leaderFileList = new ConcurrentHashMap<String, FileInfo>();
     public static MemberGroup memberGroup = new MemberGroup();
-    public static String SDFSADDRESS = "/Users/wsw/Desktop/sdfsfile";
+    public static String SDFSADDRESS = "/home/shaowen2/mp3/sdfs";
     public boolean rejoin = false;
 
     public static int socketPort = 4444;

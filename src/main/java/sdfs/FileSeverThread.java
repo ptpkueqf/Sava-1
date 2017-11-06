@@ -12,8 +12,10 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * this class is responsible for dealing with request from other nodes
+ */
 public class FileSeverThread extends Thread {
-
 
     //private Socket socket;
     public static Logger logger = Logger.getLogger(FileOperation.class);
@@ -72,7 +74,7 @@ public class FileSeverThread extends Thread {
                     output.close();
                     inputMessage.close();
                     socket.close();
-                    System.out.println("File " + filename + " received from client.");
+                    System.out.println("File " + filename + " received from client" + socket.getInetAddress().getHostAddress().toString());
 
 
                 } else if (type.equalsIgnoreCase("get")) {
@@ -145,10 +147,10 @@ public class FileSeverThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /**
+     * deal with query requests from other nodes to the master
      * @param message
      * @return
      */
@@ -202,6 +204,7 @@ public class FileSeverThread extends Thread {
     }
 
     /**
+     * deal with put command query
      * @param filename
      * @return
      */
@@ -221,7 +224,7 @@ public class FileSeverThread extends Thread {
                 conflict = true;
             }
 
-            // return 3 random  ips
+            //return 3 random  ips
             if (storeIps.size() < 3) {
                 //provide conflict
                 if (conflict) {
@@ -250,8 +253,7 @@ public class FileSeverThread extends Thread {
                 fileInfo.setLastUpdateTime(temp[(i + 1) % 3], currenttime);
             }
         } else {
-            //file not exit in the system
-
+            //if file doesn't exit in the system
             ConcurrentHashMap<String, MemberInfo> list = MemberGroup.membershipList;
             ArrayList<String> ips = new ArrayList<String>();
             //collect all the alive node
@@ -291,6 +293,7 @@ public class FileSeverThread extends Thread {
     }
 
     /**
+     * check whether the file exists in the system or not
      * @param filename
      * @return
      */

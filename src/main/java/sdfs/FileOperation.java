@@ -9,13 +9,18 @@ import java.sql.Time;
 import java.util.*;
 
 
+/**
+ * class for organizing the file operation
+ */
 public class FileOperation {
     public static Logger logger = Logger.getLogger(FileOperation.class);
     //public static String[] sendMessage;
     RequestIp rp = new RequestIp();
     private boolean outoftime = false;
 
-
+    /**
+     * responsible for the time-time bounded conflict
+     */
     private class outOfTime extends TimerTask {
         public void run() {
             System.out.println("Out of time! Please enter anything to exit!");
@@ -69,13 +74,6 @@ public class FileOperation {
             ips.remove(0);
         }
 
-//        //here, we use the quorums
-//        Set<Integer> set = new HashSet<Integer>();
-//        while (set.size() != (ips.size() / 2 + 1)) {
-//            int randomIndex = (int) (Math.random() * 3);
-//            set.add(randomIndex);
-//        }
-
         //we need to judge whether ips contains my own ip
 
         for (String str : ips) {
@@ -92,15 +90,6 @@ public class FileOperation {
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
         ips = rp.queryForIps(sendMessage);
-
-
-
-        //here, we use the quorums, here, we need to ensure the total ordering
-//        Set<Integer> set = new HashSet<Integer>();
-//        while (set.size() != (ips.size() / 2 + 1)) {
-//            int randomIndex = (int) (Math.random() * 3);
-//            set.add(randomIndex);
-//        }
 
         //we need to judge whether ips contains my own ip
         if (ips.size() != 0) {
@@ -136,17 +125,4 @@ public class FileOperation {
         ips = rp.queryForIps(sendMessage);
         return ips;
     }
-
-
-//    // listall files storing in this machine and return file names
-//    public String[] listFiles(String machineId) {
-//
-//        String[] fileNames = null;
-//
-//
-//
-//        //TODO
-//        return fileNames;
-//    }
-
 }

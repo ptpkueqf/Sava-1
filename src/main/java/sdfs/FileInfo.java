@@ -13,8 +13,8 @@ public class FileInfo implements Serializable{
 
     private String sdfsFileName;
     //private String localFileName;
-    private HashSet<String> storeIPS;
-    private HashMap<String, Long> updateTimeRelation;
+    private HashSet<String> storeIPS; //servers that store the file
+    private HashMap<String, Long> updateTimeRelation; //recode the store server and last update time
 
     public FileInfo(String sdfsFileName, HashSet<String> ips, HashMap<String, Long> lastUpdateTime)
     {
@@ -24,14 +24,21 @@ public class FileInfo implements Serializable{
     }
 
 
+    /**
+     * return the iplist
+     * @return
+     */
     public HashSet<String> getIps() {
         return storeIPS;
     }
 
     //public String getLocalFileName(){ return localFileName; }
-
     public String getSdfsFileName(){ return sdfsFileName; }
 
+    /**
+     * get the last update time
+     * @return
+     */
     public long getLastUpateTime()
     {
         long lastupdate = 0;
@@ -43,6 +50,10 @@ public class FileInfo implements Serializable{
         return lastupdate;
     }
 
+    /**
+     * get the last update server
+     * @return
+     */
     public String getLastUpdateServer() {
         long lastupdate = 0;
         String lastServer = "";
