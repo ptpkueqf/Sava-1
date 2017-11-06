@@ -273,7 +273,6 @@ public class ReceiveThread extends Thread{
                 System.out.println("start replicating!");
                 ReReplicate reReplicate = new ReReplicate();
                 sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
-
             }
         }
 

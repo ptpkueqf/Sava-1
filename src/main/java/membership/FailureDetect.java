@@ -1,12 +1,17 @@
 package membership;
 
 import org.apache.log4j.Logger;
+import sdfs.LeaderElection;
+import sdfs.ReReplicate;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class FailureDetect extends Thread {
     public static Logger logger = Logger.getLogger(FailureDetect.class);
@@ -68,8 +73,26 @@ public class FailureDetect extends Thread {
                 if (currentTime - entry.getValue().getActiveTime() > failTime) {
                     //System.out.println("System currenttime" + currentTime + " " + entry.getValue().getActiveTime());
                     //set the state of the node false
+
+                    //here add some judege to deal with SDFS leader judge.
+                    String prevLeader = new LeaderElection().getLeaderIp();
+
                     entry.getValue().setIsActive(false);
                     entry.getValue().setScannable(false);
+
+                    String curLeader = new LeaderElection().getLeaderIp();
+
+                    if (!curLeader.equals(prevLeader) && MemberGroup.machineIp.equals(curLeader)) {
+
+                        ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
+                        //before send heartbeat, set to detect the failure regularly
+                        //logger.info("Start the failure detection thread.");
+                        System.out.println("start replicating!");
+                        ReReplicate reReplicate = new ReReplicate();
+                        sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
+                    }
+
+
                     //disseminate the failure after another failTime
                         for (String ip : ips) {
                             if (!ip.equals(MemberGroup.machineIp) && !ip.equals(entry.getValue().getIp())) {
