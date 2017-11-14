@@ -87,20 +87,18 @@ public class FailureDetect extends Thread {
                         ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
                         //before send heartbeat, set to detect the failure regularly
                         //logger.info("Start the failure detection thread.");
-                        System.out.println("start replicating!");
+                        System.out.println("start replicating! failure detect");
                         ReReplicate reReplicate = new ReReplicate();
                         sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
                     }
 
-
                     //disseminate the failure after another failTime
-                        for (String ip : ips) {
-                            if (!ip.equals(MemberGroup.machineIp) && !ip.equals(entry.getValue().getIp())) {
-                                logger.info("Send failue disseminate from" + MemberGroup.machineId + "to" + ip + "about" + entry.getValue().getIp());
-                                MemberGroup.singleRequest(ip, "disseminate", entry.getKey());
-                            }
+                    for (String ip : ips) {
+                        if (!ip.equals(MemberGroup.machineIp) && !ip.equals(entry.getValue().getIp())) {
+                            logger.info("Send failue disseminate from" + MemberGroup.machineId + "to" + ip + "about" + entry.getValue().getIp());
+                            MemberGroup.singleRequest(ip, "disseminate", entry.getKey());
                         }
-
+                    }
                 }
             }
         }

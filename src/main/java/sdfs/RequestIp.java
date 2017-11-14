@@ -19,9 +19,9 @@ public class RequestIp {
 
     public static int fileTransferPort = SDFSMain.socketPort;
 
-    LeaderElection leader = new LeaderElection();
+    //LeaderElection leader;
 
-    String leaderIp = leader.getLeaderIp();
+    //String leaderIp = leader.getLeaderIp();
     //int leaderPort =  leader.getLeaderPort();
     //RequestIp fst = new RequestIp();
 
@@ -37,6 +37,7 @@ public class RequestIp {
 
         ArrayList<String> returnIps = new ArrayList<String>();
         try {
+            String leaderIp = new LeaderElection().getLeaderIp();
             socket = new Socket(leaderIp,fileTransferPort);
             InputStream inputs = socket.getInputStream();
             OutputStream outputs = socket.getOutputStream();

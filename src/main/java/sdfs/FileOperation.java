@@ -15,7 +15,7 @@ import java.util.*;
 public class FileOperation {
     public static Logger logger = Logger.getLogger(FileOperation.class);
     //public static String[] sendMessage;
-    RequestIp rp = new RequestIp();
+    RequestIp rp;
     private boolean outoftime = false;
 
     /**
@@ -36,7 +36,9 @@ public class FileOperation {
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
 
+        rp = new RequestIp();
         ips = rp.queryForIps(sendMessage);
+
 
         if (ips.get(0).equals("judge")) {
             System.out.println("Are you sure to update the file? [yes/no]");
@@ -75,7 +77,6 @@ public class FileOperation {
         }
 
         //we need to judge whether ips contains my own ip
-
         for (String str : ips) {
             FileClientThread ftc1 = new FileClientThread(str, sendMessage);
             ftc1.start();
@@ -89,7 +90,13 @@ public class FileOperation {
         sendMessage[0] = "get";
         sendMessage[1] = localfilename;
         sendMessage[2] = sdfsfilename;
+
+        rp = new RequestIp();
         ips = rp.queryForIps(sendMessage);
+
+        if (ips.size() == 0) {
+            System.out.println("Sorry, the file is not available");
+        }
 
         //we need to judge whether ips contains my own ip
         if (ips.size() != 0) {
@@ -106,7 +113,13 @@ public class FileOperation {
         String[] sendMessage = new String[2];
         sendMessage[0] = "delete";
         sendMessage[1] = sdfsfilename;
+
+        rp = new RequestIp();
         ips = rp.queryForIps(sendMessage);
+
+        if (ips.size() == 0) {
+            System.out.println("File " + sdfsfilename + " doesn't exist in the system");
+        }
 
         if (ips.size() != 0) {
             for (String ip : ips) {
@@ -122,6 +135,7 @@ public class FileOperation {
         String[] sendMessage = new String[2];
         sendMessage[0] = "listmembers";
         sendMessage[1] = sdfsfilename;
+        rp = new RequestIp();
         ips = rp.queryForIps(sendMessage);
         return ips;
     }

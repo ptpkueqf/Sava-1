@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ReReplicate extends Thread{
 
     public void run() {
+
         //first, according to the failure (if any), we reorganize the filelist
         ConcurrentHashMap<String, MemberInfo> membershipList = MemberGroup.membershipList;
         ConcurrentHashMap<String, FileInfo> leaderFileList = SDFSMain.leaderFileList;
@@ -23,6 +24,7 @@ public class ReReplicate extends Thread{
         ArrayList<String> aliveSevers = new ArrayList<String>();
 
         boolean filelistChanged = false;
+        String debugType = "";
 
         //find out all the failed servers and alive servers
         for (Map.Entry<String, MemberInfo> entry : membershipList.entrySet()) {
@@ -42,8 +44,8 @@ public class ReReplicate extends Thread{
             for (String str : ips) {
                 if (failedSever.contains(str)) {
                     filelistChanged = true;
-
                     changes.add(str);
+                    debugType += "1";
                 }
             }
 
@@ -91,7 +93,8 @@ public class ReReplicate extends Thread{
                 entry.getValue().getUpdateTimeRelation().put(targetServer2, currentime);
 
                 filelistChanged = true;
-            } else {
+                debugType += "2";
+            } else if (ips.size() == 2 || ips.size() == 1) {
 
                 int index = aliveSevers.indexOf(ips.get(0));
                 String targetServer = ips.get(0);
@@ -112,12 +115,14 @@ public class ReReplicate extends Thread{
                 entry.getValue().getUpdateTimeRelation().put(targetServer, System.currentTimeMillis());
 
                 filelistChanged = true;
+                debugType += "3";
             }
         }
 
         //then, if the filelist changed, we need to share the updated filelist to other potential masters.
         if (filelistChanged) {
             SDFSMain.shareFileList();
+            //System.out.println("-------------------------"+ debugType);
         }
     }
 }

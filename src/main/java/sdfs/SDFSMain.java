@@ -91,8 +91,16 @@ public class SDFSMain {
             if (memberAction[0].equalsIgnoreCase("join")) {
                 joinSystem();
             } else if (memberAction[0].equalsIgnoreCase("put")) {
+                if (memberAction.length != 3) {
+                    System.out.println("Wrong command, please input correct command");
+                    continue;
+                }
                 putFile(memberAction[1], memberAction[2]);
             } else if (memberAction[0].equalsIgnoreCase("get")) {
+                if (memberAction.length != 3) {
+                    System.out.println("Wrong command, please input correct command");
+                    continue;
+                }
                 getFile(memberAction[2], memberAction[1]);
             } else if (memberAction[0].equalsIgnoreCase("delete")) {
                 deleteFile(memberAction[1]);
@@ -108,12 +116,23 @@ public class SDFSMain {
                 File file = new File(SDFSADDRESS);
                 rejoin = true;
                 deleteDir(file, 0);
-
                 memberGroup.leaveGroup();
             } else if (memberAction[0].equalsIgnoreCase("grep")) {
 
                 GrepClient.grep(memberAction);
 
+            } else if (memberAction[0].equalsIgnoreCase("length")) {
+                if (memberAction.length != 3) {
+                    System.out.println("Wrong command, please input correct command");
+                    continue;
+                }
+                fileSize(memberAction[1], memberAction[2]);
+            } else if (memberAction[0].equalsIgnoreCase("less")) {
+                if (memberAction.length != 3) {
+                    System.out.println("Wrong command, please input correct command");
+                    continue;
+                }
+                queryFileUsingLess(memberAction[1], memberAction[2]);
             } else {
                 System.out.println("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
                 logger.info("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
@@ -121,6 +140,53 @@ public class SDFSMain {
         }
     }
 
+
+    public void queryFileUsingLess(String position, String filename) {
+        if (position.equals("local")) {
+            String command = "less " + FileClientThread.LOCALADDRESS + filename;
+            try {
+                Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", command});
+                BufferedReader breader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                String info;
+
+                while((info = breader.readLine()) != null) {
+                    System.out.println(info);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (position.equals("sdfs")) {
+            String command = "less " + SDFSADDRESS + "/" + filename;
+            try {
+                Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", command});
+
+                BufferedReader breader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                String info;
+
+                while((info = breader.readLine()) != null) {
+                    System.out.println(info);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * query the file size
+     */
+    public void fileSize(String position, String fileName) {
+        if (position.equals("local")) {
+            File file = new File(FileClientThread.LOCALADDRESS + fileName);
+            System.out.println("size of local file " + fileName + " is " + file.length());
+        } else if (position.equals("sdfs")) {
+            File file = new File(SDFSADDRESS + "/" + fileName);
+            System.out.println("size of sdfs file " + fileName + " is " + file.length());
+        }
+    }
 
     /**
      * send join request to the introducer
@@ -136,7 +202,7 @@ public class SDFSMain {
             severThread.start();
         }
 
-        if (!rejoin && localIP.equals(new LeaderElection().getLeaderIp())) {
+        if (!rejoin && localIP.equals(LeaderElection.Leader1)) {
 
             System.out.println("start the re-replicate!");
 
@@ -241,7 +307,6 @@ public class SDFSMain {
         sdfsFileName = sdfsfilename;
         FileOperation delete = new FileOperation();
         delete.deleteFile(sdfsFileName);
-
     }
 
     /**
@@ -253,7 +318,12 @@ public class SDFSMain {
         FileOperation list = new FileOperation();
         //TODO
         ArrayList<String> addresses = list.listMembers(sdfsFileName);
-        System.out.println("File Name" + sdfsFileName + "is currently storing at addresses\n" + addresses);
+
+        if (addresses.size() > 0) {
+            System.out.println("File " + sdfsFileName + "is currently storing at addresses\n" + addresses);
+        } else {
+            System.out.println("File  " + sdfsfilename + " doesn't exist in the system");
+        }
     }
 
     /**
@@ -265,6 +335,7 @@ public class SDFSMain {
 //        FileOperation list = new FileOperation();
 //        String[] files = list.listFiles(machineIp);
         File file = new File(SDFSADDRESS);
+
         String[] files = null;
         if (file.isDirectory()) {
             files = file.list();

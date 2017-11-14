@@ -20,6 +20,8 @@ public class FileSeverThread extends Thread {
     //private Socket socket;
     public static Logger logger = Logger.getLogger(FileOperation.class);
     private String SDFSADDRESS = SDFSMain.SDFSADDRESS + "/";
+    private ServerSocket ssocket = null;
+    private Socket socket = null;
 
 
     public void run() {
@@ -27,8 +29,7 @@ public class FileSeverThread extends Thread {
         InputStream input;
         OutputStream output;
         DataInputStream inputMessage = null;
-        ServerSocket ssocket = null;
-        Socket socket = null;
+
         try {
             ssocket = new ServerSocket(4444);
         } catch (IOException e) {
@@ -48,7 +49,7 @@ public class FileSeverThread extends Thread {
                 String[] ops = message.split("_");
                 String type = ops[0];
 
-                System.out.println("FileSeverThread ops size :" + ops.length);
+                //System.out.println("FileSeverThread ops size :" + ops.length);
 
                 if (type.equalsIgnoreCase("put")) {
 
@@ -179,7 +180,7 @@ public class FileSeverThread extends Thread {
                 logger.info("Can't get! The file doesn't exit!");
             }
             //when the file doesn't exist, do nothing, just return the empty ip list
-        } else if (message[1].equalsIgnoreCase("delete") || message[1].equalsIgnoreCase("listmembers")) {
+        } else if (message[1].equalsIgnoreCase("delete")) {
             //check whether the file is in the filelist
             if (checkExist(message[2])) {
                 //return 3 ips to delete the file
@@ -194,9 +195,13 @@ public class FileSeverThread extends Thread {
                 //then, share the updated file list
                 SDFSMain.shareFileList();
 
-            } else {
-                System.out.println("The file doesn't exist!");
-                logger.info("The file doesn't exist!");
+            }
+        } else if (message[1].equalsIgnoreCase("listmembers")) {
+            if (checkExist(message[2])) {
+                HashSet<String> storeIps = SDFSMain.leaderFileList.get(message[2]).getIps();
+                for (String str : storeIps) {
+                    selectedIps.add(str);
+                }
             }
         }
 
@@ -253,32 +258,42 @@ public class FileSeverThread extends Thread {
                 fileInfo.setLastUpdateTime(temp[(i + 1) % 3], currenttime);
             }
         } else {
+
+            //System.out.println("not exist file " + filename + " query for IPs" );
             //if file doesn't exit in the system
             ConcurrentHashMap<String, MemberInfo> list = MemberGroup.membershipList;
-            ArrayList<String> ips = new ArrayList<String>();
+            ArrayList<String> aliveservers = new ArrayList<String>();
             //collect all the alive node
             for (Map.Entry<String, MemberInfo> entry : list.entrySet()) {
                 if (entry.getValue().getIsActive()) {
-                    ips.add(entry.getValue().getIp());
+                    aliveservers.add(entry.getValue().getIp());
                 }
             }
 
-            Collections.sort(ips);
-            int size = ips.size();
+            Collections.sort(aliveservers);
+
+            int size = aliveservers.size();
             int index = 0;
-            try {
-                index = ips.indexOf(InetAddress.getLocalHost().getHostAddress().toString());
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+
+            index = aliveservers.indexOf(socket.getInetAddress().getHostAddress().toString());
+
+//            System.out.print("current alive servers: ");
+//            for (int i = 0; i < aliveservers.size(); i++) {
+//                System.out.print(aliveservers.get(i) + " ");
+//            }
+//            System.out.print("\ncurrent index" + index + "\n");
 
             HashSet<String> tempset = new HashSet<String>();
-            tempset.add(ips.get(index));
-            tempset.add(ips.get((index + 1) % size));
-            tempset.add(ips.get((index + 2) % size));
+            tempset.add(aliveservers.get(index));
+            tempset.add(aliveservers.get((index + 1) % size));
+            tempset.add(aliveservers.get((index + 2) % size));
 
+
+            //System.out.println("choosed servers :");
             HashMap<String, Long> map = new HashMap<String, Long>();
             for (String str : tempset) {
+
+                //System.out.print(str + " ");
                 selectedIps.add(str);
                 map.put(str, System.currentTimeMillis());
             }

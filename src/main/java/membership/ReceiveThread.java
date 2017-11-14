@@ -270,7 +270,7 @@ public class ReceiveThread extends Thread{
                 ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
                 //before send heartbeat, set to detect the failure regularly
                 //logger.info("Start the failure detection thread.");
-                System.out.println("start replicating!");
+                System.out.println("start replicating! dissemi");
                 ReReplicate reReplicate = new ReReplicate();
                 sendScheduler.scheduleAtFixedRate(reReplicate, 0, 1000, TimeUnit.MILLISECONDS);
             }

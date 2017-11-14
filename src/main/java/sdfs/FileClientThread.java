@@ -30,7 +30,7 @@ public class FileClientThread extends Thread {
     public Random rand;
     public String currentIp;
     public String[] message;
-    private String LOCALADDRESS = "/home/shaowen2/mp3/local/";
+    public static  String LOCALADDRESS = "/home/shaowen2/mp3/local/";
 
     LeaderElection leader = new LeaderElection();
     String leaderIp = leader.getLeaderIp();
@@ -80,8 +80,8 @@ public class FileClientThread extends Thread {
 
                 File file;
                 if (receivedmessage[0].equalsIgnoreCase("put")) {
-                    file = new File(LOCALADDRESS + message[2]);
-                    System.out.println("get file from" + LOCALADDRESS + message[2]);
+                    file = new File(LOCALADDRESS + message[1]);
+                    System.out.println("get file from" + LOCALADDRESS + message[1]);
                 } else {
                     file = new File(SDFSMain.SDFSADDRESS + "/" + message[2]);
                 }
@@ -124,7 +124,7 @@ public class FileClientThread extends Thread {
 
                 DataInputStream input = new DataInputStream(inputs);
 
-                File outputfile = new File (LOCALADDRESS + message[2]);
+                File outputfile = new File (LOCALADDRESS + message[1]);
                 outputfile.createNewFile(); //if exists, do nothing
                 FileOutputStream out = new FileOutputStream(outputfile);
 
