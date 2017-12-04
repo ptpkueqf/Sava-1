@@ -48,7 +48,7 @@ public class LeaderElection {
             return null;
         }
 
-//        if (SDFSMain.curLeader != null && SDFSMain.curLeader != currentLeader) {
+//        if (SDFS.curLeader != null && SDFS.curLeader != currentLeader) {
 //
 //        }
         return currentLeader;

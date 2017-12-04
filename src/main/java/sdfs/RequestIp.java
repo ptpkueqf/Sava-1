@@ -17,7 +17,7 @@ public class RequestIp {
     public static Logger logger = Logger.getLogger(FileOperation.class);
     public static String[] sendMessage;
 
-    public static int fileTransferPort = SDFSMain.socketPort;
+    public static int fileTransferPort = SDFS.socketPort;
 
     //LeaderElection leader;
 

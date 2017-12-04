@@ -19,7 +19,7 @@ public class FileSeverThread extends Thread {
 
     //private Socket socket;
     public static Logger logger = Logger.getLogger(FileOperation.class);
-    private String SDFSADDRESS = SDFSMain.SDFSADDRESS + "/";
+    private String SDFSADDRESS = SDFS.SDFSADDRESS + "/";
     private ServerSocket ssocket = null;
     private Socket socket = null;
 
@@ -136,7 +136,7 @@ public class FileSeverThread extends Thread {
                     try {
                         Object object = objectInput.readObject();
                         ConcurrentHashMap<String, FileInfo> receivedList = (ConcurrentHashMap<String, FileInfo>) object;
-                        SDFSMain.leaderFileList = receivedList;
+                        SDFS.leaderFileList = receivedList;
 
                         System.out.println("Successfully update the file list");
                     } catch (ClassNotFoundException e) {
@@ -165,7 +165,7 @@ public class FileSeverThread extends Thread {
             selectedIps = DealPutQuery(message[3]);
 
             //after the put operation, the fileList updated, thus we need to share the list to other masters
-            SDFSMain.shareFileList();
+            SDFS.shareFileList();
 
         } else if (message[1].equalsIgnoreCase("get")) {
             //check whether the file is in the filelist
@@ -173,7 +173,7 @@ public class FileSeverThread extends Thread {
                 //return the 2 of 3 ips for client to get the file
                 int index = rand.nextInt(3);
 
-                selectedIps.add(SDFSMain.leaderFileList.get(message[3]).getLastUpdateServer());
+                selectedIps.add(SDFS.leaderFileList.get(message[3]).getLastUpdateServer());
 
             } else {
                 System.out.println("Can't get! The file doesn't exist!");
@@ -184,21 +184,21 @@ public class FileSeverThread extends Thread {
             //check whether the file is in the filelist
             if (checkExist(message[2])) {
                 //return 3 ips to delete the file
-                HashSet<String> storeIps = SDFSMain.leaderFileList.get(message[2]).getIps();
+                HashSet<String> storeIps = SDFS.leaderFileList.get(message[2]).getIps();
                 for (String str : storeIps) {
                     selectedIps.add(str);
                 }
 
                 //delete the record from the filelist
-                SDFSMain.leaderFileList.remove(message[2]);
+                SDFS.leaderFileList.remove(message[2]);
 
                 //then, share the updated file list
-                SDFSMain.shareFileList();
+                SDFS.shareFileList();
 
             }
         } else if (message[1].equalsIgnoreCase("listmembers")) {
             if (checkExist(message[2])) {
-                HashSet<String> storeIps = SDFSMain.leaderFileList.get(message[2]).getIps();
+                HashSet<String> storeIps = SDFS.leaderFileList.get(message[2]).getIps();
                 for (String str : storeIps) {
                     selectedIps.add(str);
                 }
@@ -219,7 +219,7 @@ public class FileSeverThread extends Thread {
         //check whether the file is already in the filelist
         if (checkExist(filename)) {
 
-            FileInfo fileInfo = SDFSMain.leaderFileList.get(filename);
+            FileInfo fileInfo = SDFS.leaderFileList.get(filename);
             HashSet<String> storeIps = fileInfo.getIps();
             long lastupdatetime = fileInfo.getLastUpateTime();
             long currenttime = System.currentTimeMillis();
@@ -301,7 +301,7 @@ public class FileSeverThread extends Thread {
             //insert new information into the file system
 
             FileInfo newinfo = new FileInfo(filename, tempset, map);
-            SDFSMain.leaderFileList.put(filename, newinfo);
+            SDFS.leaderFileList.put(filename, newinfo);
         }
 
         return selectedIps;
@@ -313,7 +313,7 @@ public class FileSeverThread extends Thread {
      * @return
      */
     public boolean checkExist(String filename) {
-        return SDFSMain.leaderFileList.containsKey(filename);
+        return SDFS.leaderFileList.containsKey(filename);
     }
 
     /**

@@ -2,12 +2,10 @@ package sdfs;
 
 
 import grep.GrepClient;
-import grep.GrepServer;
 import membership.MemberGroup;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -23,14 +21,14 @@ import java.util.concurrent.TimeUnit;
  *   put/get/delete files in the system.
  */
 
-public class SDFSMain {
+public class SDFS {
 
-    public static Logger logger = Logger.getLogger(SDFSMain.class);
+    public static Logger logger = Logger.getLogger(SDFS.class);
     private static String localFileName;
     private static String sdfsFileName;
     public static ConcurrentHashMap<String, FileInfo> leaderFileList = new ConcurrentHashMap<String, FileInfo>();
     public static MemberGroup memberGroup = new MemberGroup();
-    public static String SDFSADDRESS = "/home/shaowen2/mp3/sdfs";
+    public static String SDFSADDRESS = "/home/shaowen2/mp4/sdfs";
     public boolean rejoin = false;
 
     public static int socketPort = 4444;
@@ -40,12 +38,12 @@ public class SDFSMain {
 
     public static void main(String[] args) {
 
-        SDFSMain sdfsMain = new SDFSMain();
-        sdfsMain.start();
+        SDFS sdfs = new SDFS();
+        sdfs.start();
         return;
     }
 
-    private void start() {
+    public void start() {
 
         try {
             localIP = InetAddress.getLocalHost().getHostAddress().toString();
@@ -59,85 +57,87 @@ public class SDFSMain {
         //new GrepServer("8090").start();
 
         MemberGroup.logEntry();
-
-        // first join the membership group
-        System.out.println(" Enter 'join' to join the system first");
-
-        // ask the member to choose its action
-        System.out.println("\nAfter join in the sytem, you can choose the following action: ");
-        System.out.println("\nEnter 'membership' to modify the membership group");
-        System.out.println("\nEnter 'id' to show the membership id");
-        System.out.println("\nEnter 'leave' to leave the system");
-        //System.out.println("\nEnter 'grep' and queries to grep\n");
-        System.out.println("\nEnter 'put localfilename sdfsfilename' to insert or update the file");
-        System.out.println("\nEnter 'get sdfsfilename localfilename' to get the file from the SDFS");
-        System.out.println("\nEnter 'delete sdfsfilename' to delete the file from the SDFS");
-        System.out.println("\nEnter 'ls sdfsfilename' to list all members storing this file");
-        System.out.println("\nEnter 'store sdfsfilename' to list all files storing in this member\n");
+        joinSystem();
 
 
-        while (true) {
-            InputStreamReader is_reader = new InputStreamReader(System.in);
-            String memberActionline = "";
-            try {
-                memberActionline = new BufferedReader(is_reader).readLine();
-            } catch (IOException e) {
-                logger.error(e);
-                e.printStackTrace();
-            }
-            String[] memberAction = memberActionline.split(" ");
+//        // first join the membership group
+//        System.out.println(" Enter 'join' to join the system first");
+//
+//        // ask the member to choose its action
+//        System.out.println("\nAfter join in the sytem, you can choose the following action: ");
+//        System.out.println("\nEnter 'membership' to modify the membership group");
+//        System.out.println("\nEnter 'id' to show the membership id");
+//        System.out.println("\nEnter 'leave' to leave the system");
+//        //System.out.println("\nEnter 'grep' and queries to grep\n");
+//        System.out.println("\nEnter 'put localfilename sdfsfilename' to insert or update the file");
+//        System.out.println("\nEnter 'get sdfsfilename localfilename' to get the file from the SDFS");
+//        System.out.println("\nEnter 'delete sdfsfilename' to delete the file from the SDFS");
+//        System.out.println("\nEnter 'ls sdfsfilename' to list all members storing this file");
+//        System.out.println("\nEnter 'store sdfsfilename' to list all files storing in this member\n");
 
-            // act according to member's action
-            if (memberAction[0].equalsIgnoreCase("join")) {
-                joinSystem();
-            } else if (memberAction[0].equalsIgnoreCase("put")) {
-                if (memberAction.length != 3) {
-                    System.out.println("Wrong command, please input correct command");
-                    continue;
-                }
-                putFile(memberAction[1], memberAction[2]);
-            } else if (memberAction[0].equalsIgnoreCase("get")) {
-                if (memberAction.length != 3) {
-                    System.out.println("Wrong command, please input correct command");
-                    continue;
-                }
-                getFile(memberAction[2], memberAction[1]);
-            } else if (memberAction[0].equalsIgnoreCase("delete")) {
-                deleteFile(memberAction[1]);
-            } else if (memberAction[0].equalsIgnoreCase("ls")) {
-                listMember(memberAction[1]);
-            } else if (memberAction[0].equalsIgnoreCase("store")) {
-                listFiles();
-            } else if (memberAction[0].equalsIgnoreCase("membership")) {
-                memberGroup.listMembership();
-            } else if (memberAction[0].equalsIgnoreCase("id")) {
-                memberGroup.listMemberId();
-            } else if (memberAction[0].equalsIgnoreCase("leave")) {
-                File file = new File(SDFSADDRESS);
-                rejoin = true;
-                deleteDir(file, 0);
-                memberGroup.leaveGroup();
-            } else if (memberAction[0].equalsIgnoreCase("grep")) {
 
-                GrepClient.grep(memberAction);
-
-            } else if (memberAction[0].equalsIgnoreCase("length")) {
-                if (memberAction.length != 3) {
-                    System.out.println("Wrong command, please input correct command");
-                    continue;
-                }
-                fileSize(memberAction[1], memberAction[2]);
-            } else if (memberAction[0].equalsIgnoreCase("less")) {
-                if (memberAction.length != 3) {
-                    System.out.println("Wrong command, please input correct command");
-                    continue;
-                }
-                queryFileUsingLess(memberAction[1], memberAction[2]);
-            } else {
-                System.out.println("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
-                logger.info("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
-            }
-        }
+//        while (true) {
+//            InputStreamReader is_reader = new InputStreamReader(System.in);
+//            String memberActionline = "";
+//            try {
+//                memberActionline = new BufferedReader(is_reader).readLine();
+//            } catch (IOException e) {
+//                logger.error(e);
+//                e.printStackTrace();
+//            }
+//            String[] memberAction = memberActionline.split(" ");
+//
+//            // act according to member's action
+//            if (memberAction[0].equalsIgnoreCase("join")) {
+//                joinSystem();
+//            } else if (memberAction[0].equalsIgnoreCase("put")) {
+//                if (memberAction.length != 3) {
+//                    System.out.println("Wrong command, please input correct command");
+//                    continue;
+//                }
+//                putFile(memberAction[1], memberAction[2]);
+//            } else if (memberAction[0].equalsIgnoreCase("get")) {
+//                if (memberAction.length != 3) {
+//                    System.out.println("Wrong command, please input correct command");
+//                    continue;
+//                }
+//                getFile(memberAction[2], memberAction[1]);
+//            } else if (memberAction[0].equalsIgnoreCase("delete")) {
+//                deleteFile(memberAction[1]);
+//            } else if (memberAction[0].equalsIgnoreCase("ls")) {
+//                listMember(memberAction[1]);
+//            } else if (memberAction[0].equalsIgnoreCase("store")) {
+//                listFiles();
+//            } else if (memberAction[0].equalsIgnoreCase("membership")) {
+//                memberGroup.listMembership();
+//            } else if (memberAction[0].equalsIgnoreCase("id")) {
+//                memberGroup.listMemberId();
+//            } else if (memberAction[0].equalsIgnoreCase("leave")) {
+//                File file = new File(SDFSADDRESS);
+//                rejoin = true;
+//                deleteDir(file, 0);
+//                memberGroup.leaveGroup();
+//            } else if (memberAction[0].equalsIgnoreCase("grep")) {
+//
+//                GrepClient.grep(memberAction);
+//
+//            } else if (memberAction[0].equalsIgnoreCase("length")) {
+//                if (memberAction.length != 3) {
+//                    System.out.println("Wrong command, please input correct command");
+//                    continue;
+//                }
+//                fileSize(memberAction[1], memberAction[2]);
+//            } else if (memberAction[0].equalsIgnoreCase("less")) {
+//                if (memberAction.length != 3) {
+//                    System.out.println("Wrong command, please input correct command");
+//                    continue;
+//                }
+//                queryFileUsingLess(memberAction[1], memberAction[2]);
+//            } else {
+//                System.out.println("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
+//                logger.info("wrong operation!  please input put, get, delete, ls, store, membership or grep command!");
+//            }
+//        }
     }
 
 
@@ -195,7 +195,9 @@ public class SDFSMain {
 
         File file = new File(SDFSADDRESS);
         deleteDir(file, 0);
+        System.out.println("Joining the group");
         memberGroup.joinGroup();
+
         //start the file sever thread if it's not rejoin
         if (!rejoin) {
             FileSeverThread severThread = new FileSeverThread();
@@ -258,7 +260,7 @@ public class SDFSMain {
             }
 
             try {
-                socket = new Socket(leader, SDFSMain.socketPort);
+                socket = new Socket(leader, SDFS.socketPort);
 
                 OutputStream outputs = socket.getOutputStream();
                 DataOutputStream dataOps = new DataOutputStream(outputs);
@@ -266,7 +268,7 @@ public class SDFSMain {
                 dataOps.flush();
 
                 ObjectOutputStream objects = new ObjectOutputStream(outputs);
-                objects.writeObject(SDFSMain.leaderFileList);
+                objects.writeObject(SDFS.leaderFileList);
                 objects.flush();
                 objects.close();
 

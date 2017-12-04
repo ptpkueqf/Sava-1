@@ -1,6 +1,5 @@
 package sdfs;
 
-import membership.MemberGroup;
 import org.apache.log4j.Logger;
 
 import java.io.InputStream;
@@ -13,9 +12,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 
 
@@ -25,12 +21,12 @@ import java.util.Random;
 
 public class FileClientThread extends Thread {
     public static Logger logger = Logger.getLogger(FileClientThread.class);
-    public static int port = SDFSMain.socketPort;
+    public static int port = SDFS.socketPort;
     public String ip;
     public Random rand;
     public String currentIp;
     public String[] message;
-    public static  String LOCALADDRESS = "/home/shaowen2/mp3/local/";
+    public static  String LOCALADDRESS = "/home/shaowen2/mp4/local/";
 
     LeaderElection leader = new LeaderElection();
     String leaderIp = leader.getLeaderIp();
@@ -83,7 +79,7 @@ public class FileClientThread extends Thread {
                     file = new File(LOCALADDRESS + message[1]);
                     System.out.println("get file from" + LOCALADDRESS + message[1]);
                 } else {
-                    file = new File(SDFSMain.SDFSADDRESS + "/" + message[2]);
+                    file = new File(SDFS.SDFSADDRESS + "/" + message[2]);
                 }
 
 

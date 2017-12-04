@@ -18,7 +18,7 @@ public class ReReplicate extends Thread{
 
         //first, according to the failure (if any), we reorganize the filelist
         ConcurrentHashMap<String, MemberInfo> membershipList = MemberGroup.membershipList;
-        ConcurrentHashMap<String, FileInfo> leaderFileList = SDFSMain.leaderFileList;
+        ConcurrentHashMap<String, FileInfo> leaderFileList = SDFS.leaderFileList;
 
         HashSet<String> failedSever = new HashSet<String>();
         ArrayList<String> aliveSevers = new ArrayList<String>();
@@ -121,7 +121,7 @@ public class ReReplicate extends Thread{
 
         //then, if the filelist changed, we need to share the updated filelist to other potential masters.
         if (filelistChanged) {
-            SDFSMain.shareFileList();
+            SDFS.shareFileList();
             //System.out.println("-------------------------"+ debugType);
         }
     }

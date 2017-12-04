@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Vertex implements Serializable {
+public abstract class Vertex implements Serializable, Comparable{
 
     private int vertexID;
 
@@ -14,7 +14,12 @@ public abstract class Vertex implements Serializable {
 
     private double value;
 
-    private List<Integer> outVertex;
+    private List<Integer> outVertex = new ArrayList<Integer>();
+
+    public Vertex(){
+        inputMessages = new ArrayList<Message>();
+        outputMessages = new ArrayList<Message>();
+    }
 
     /**
      * return the unique id of this vertex
@@ -90,23 +95,28 @@ public abstract class Vertex implements Serializable {
     }
 
 
-    public String toString() {
-        String res = this.getVertexID() + " => ";
-        boolean flag = true;
-        for (Integer i : outVertex) {
-            if (flag) {
-                res += i.toString();
-                flag = false;
-                continue;
-            }
-            res = res + "," + i.toString();
-        }
-        return res;
-    }
+//    public String toString() {
+//        String res = this.getVertexID() + " => ";
+//        boolean flag = true;
+//        for (Integer i : outVertex) {
+//            if (flag) {
+//                res += i.toString();
+//                flag = false;
+//                continue;
+//            }
+//            res = res + "," + i.toString();
+//        }
+//        return res;
+//    }
 
     /**
      * this method should be overriden by application developer according to the application demand
      */
     public abstract void compute(int superstep);
+
+    public int compareTo(Object obj) {
+        Vertex vertex = (Vertex)obj;
+        return (int)((vertex.getValue() - this.getValue()) * 10);
+    }
 
 }
