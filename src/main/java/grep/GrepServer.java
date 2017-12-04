@@ -18,7 +18,7 @@ public class GrepServer extends Thread{
 	public void run() {
 
 //		if (args.length != 1) {
-//			System.err.println("You need to input an port for the server");
+//			System.err.println("You need to input an commandport for the server");
 //		}
 
 		int serverPort = Integer.parseInt(args);
@@ -29,7 +29,7 @@ public class GrepServer extends Thread{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Server successfully started at port" + serverPort);
+		System.out.println("Server successfully started at commandport" + serverPort);
 		listenToClient(serverSocket);
 
 	}

@@ -2,6 +2,7 @@ package application;
 
 import org.apache.log4j.Logger;
 import sava.Master;
+import sava.Standby;
 import sava.Worker;
 import sdfs.SDFS;
 
@@ -20,6 +21,7 @@ public class ApplicationEntrance {
     public static void main(String[] args) {
         ApplicationEntrance save = new ApplicationEntrance();
         save.start(args[0]);
+
      }
 
     private void start(String type) {
@@ -30,7 +32,7 @@ public class ApplicationEntrance {
         if (type.equalsIgnoreCase("master")) {
             startMaster();
         } else if (type.equalsIgnoreCase("standby")) {
-            startMaster();
+            startStandby();
         } else if (type.equalsIgnoreCase("client")) {
             startClient();
         } else if (type.equalsIgnoreCase("worker")) {
@@ -51,7 +53,8 @@ public class ApplicationEntrance {
     }
 
     private void startStandby() {
-
+        Thread standbythread = new Thread(new Standby());
+        standbythread.start();
 
     }
 

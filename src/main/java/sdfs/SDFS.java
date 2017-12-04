@@ -2,7 +2,7 @@ package sdfs;
 
 
 import grep.GrepClient;
-import membership.MemberGroup;
+import membership.*;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -31,6 +31,8 @@ public class SDFS {
     public static String SDFSADDRESS = "/home/shaowen2/mp4/sdfs";
     public boolean rejoin = false;
 
+    public static ConcurrentHashMap<String, Node> alivelist = new ConcurrentHashMap<String, Node>();
+
     public static int socketPort = 4444;
     public static String localIP;
 
@@ -55,6 +57,15 @@ public class SDFS {
 
         //start the grep server for grep query
         //new GrepServer("8090").start();
+        new NReceiveThread().start();
+
+        ScheduledExecutorService sendScheduler1 = Executors.newScheduledThreadPool(2);
+        sendScheduler1.scheduleAtFixedRate(new NFailureDetect(), 0, 2000, TimeUnit.MILLISECONDS);
+
+        ScheduledExecutorService sendScheduler = Executors.newScheduledThreadPool(2);
+        sendScheduler.scheduleAtFixedRate(new NSendThread(), 0, 600, TimeUnit.MILLISECONDS);
+
+
 
         MemberGroup.logEntry();
         joinSystem();

@@ -1,8 +1,10 @@
 package sava;
 
-import membership.MemberGroup;
-import membership.MemberInfo;
+import membership.Node;
 import org.apache.log4j.Logger;
+import sdfs.FileClientThread;
+import sdfs.FileOperation;
+import sdfs.SDFS;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -37,6 +39,7 @@ public class Standby implements Runnable{
 
     public void run() {
 
+        messages = new ArrayList<Message>();
         System.out.println("Successfully started the standby master");
         try {
 
@@ -44,23 +47,25 @@ public class Standby implements Runnable{
             ServerSocket serverSocket = new ServerSocket(Master.commandport);
             Socket acsocket = serverSocket.accept();
             ObjectInputStream objectInputStream = new ObjectInputStream(acsocket.getInputStream());
+            vertexClassName = objectInputStream.readUTF();
             vertices = (HashMap<Integer, Vertex>) objectInputStream.readObject();
-            partition = (HashMap<Integer, String>) objectInputStream.readObject();
+            //partition = (HashMap<Integer, String>) objectInputStream.readObject();
             acsocket.close();
             serverSocket.close();
 
-            //get all the alive workers
-            workers = new ArrayList<String>();
-            for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                MemberInfo member = entry.getValue();
-                if (member.getIsActive() && !member.getIp().equals(Master.masterIP) && !member.getIp().equals(Master.standbyMaster) && !member.getIp().equals(Master.client)) {
-                    workers.add(member.getIp());
-                }
-            }
+            System.out.println("Successfully get verices andd partition from master");
 
+
+//            //get all the alive workers
+//            workers = new ArrayList<String>();
+//            for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+//                Node member = entry.getValue();
+//                if (member.getIsActive() && !member.getIP().equals(Master.masterIP) && !member.getIP().equals(Master.standbyMaster) && !member.getIP().equals(Master.client)) {
+//                    workers.add(member.getIP());
+//                }
+//            }
 
             doIterations();
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -87,19 +92,26 @@ public class Standby implements Runnable{
             if (onetimeflag) {
                 try {
                     receiveMessages();
+                    partition = partition(vertices, workers);
+                    onetimeflag = false;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
 
+
+
             //before sending messages to workers, check if any worker has failed
             List<String> currentWorkers = new ArrayList<String>();
-            for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                MemberInfo member = entry.getValue();
-                if (member.getIsActive() && !member.getIp().equals(Master.masterIP) && !member.getIp().equals(Master.standbyMaster) && !member.getIp().equals(Master.client)) {
-                    currentWorkers.add(member.getIp());
+            for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+                Node member = entry.getValue();
+                if (member.getIsActive() && !member.getIP().equals(Master.masterIP) && !member.getIP().equals(Master.standbyMaster) && !member.getIP().equals(Master.client)) {
+                    currentWorkers.add(member.getIP());
                 }
             }
+
+            System.out.println(" current: "+currentWorkers.size() + " workers:" + workers.size());
+
             if (currentWorkers.size() < workers.size()) {
                 //some node has failed
                 workers = currentWorkers;
@@ -179,10 +191,10 @@ public class Standby implements Runnable{
                         System.out.println("close sockets error");
                     }
                 }
-
                 e.printStackTrace();
                 socketList.clear();
                 continue;
+
             }
 
             //when there are no new messages
@@ -197,12 +209,84 @@ public class Standby implements Runnable{
                         ObjectOutputStream objects = new ObjectOutputStream(outputStream);
                         objects.writeUTF("finish");
                         objects.flush();
+                        objects.close();
+                        socketTW.close();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                for (String worker : workers) {
+                    FileOperation get = new FileOperation();
+                    get.getFile(worker+"-solution", worker + "-solution");
+                }
+
+
+                /////////////////////////////////////////////////////////
+                ArrayList<SolutionType> solutionlist = new ArrayList<SolutionType>();
+
+                for (String worker : workers) {
+                    File file = new File(FileClientThread.LOCALADDRESS + worker + "-solution");
+                    if (file.isFile() && file.exists()) {
+
+                        try {
+                            FileInputStream fis = new FileInputStream(file);
+                            //Construct BufferedReader from InputStreamReader
+                            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+
+                            String line = null;
+                            while ((line = br.readLine()) != null) {
+                                if (line.startsWith("#")) {
+                                    continue;
+                                }
+                                String[] nodes = line.split("\\s+");
+                                int vertexID = Integer.parseInt(nodes[0]);
+                                double rankValue = Double.parseDouble(nodes[1]);
+
+                                solutionlist.add(new SolutionType(vertexID, rankValue));
+                            }
+                            br.close();
+                        }catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.out.println("Cannot find the file");
+                    }
+                }
+
+                Collections.sort(solutionlist);
+                for (int i = 0; i < 25; i++) {
+                    System.out.println(solutionlist.get(i));
+                }
             }
         } while (!noActivity);
+    }
+
+
+    private class SolutionType implements Comparable {
+
+        public double value;
+        public int ID;
+
+        public SolutionType(int ID, double value) {
+            this.ID = ID;
+            this.value = value;
+        }
+
+        public String toString() {
+            return ID + "    " + value;
+        }
+
+        public int compareTo(Object obj) {
+            SolutionType solutionType = (SolutionType) obj;
+            return (int)((solutionType.value - this.value) * 10 );
+        }
     }
 
     /**
@@ -270,7 +354,7 @@ public class Standby implements Runnable{
      */
     private void receiveMessages() throws IOException {
         int count = 0;
-        int size = workers.size();
+        int size = 0;
         boolean flag = true;
         boolean workersFlag = true;
 
@@ -296,14 +380,14 @@ public class Standby implements Runnable{
 
             if (workersFlag) {
                 workers = new ArrayList<String>();
-                for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                    MemberInfo member = entry.getValue();
-                    if (member.getIsActive() && !member.getIp().equals(Master.masterIP) && !member.getIp().equals(Master.standbyMaster) && !member.getIp().equals(Master.client)) {
-                        workers.add(member.getIp());
+                for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+                    Node member = entry.getValue();
+                    if (member.getIsActive() && !member.getIP().equals(Master.masterIP) && !member.getIP().equals(Master.standbyMaster) && !member.getIP().equals(Master.client)) {
+                        workers.add(member.getIP());
                     }
                 }
                 size = workers.size();
-                workersFlag = flag;
+                workersFlag = false;
             }
 
             if (count == size) {

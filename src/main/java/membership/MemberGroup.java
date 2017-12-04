@@ -24,7 +24,7 @@ public class MemberGroup {
 
     public static Logger logger = Logger.getLogger(MemberGroup.class);
 
-    // set receive port of every potential member
+    // set receive commandport of every potential member
     public final static int receivePort = 8088;
     public static int timeout = 2000;
     //define some variable of machine
@@ -131,7 +131,6 @@ public class MemberGroup {
             logger.error(e);
             return false;
         }
-
     }
 
     /**
@@ -286,8 +285,6 @@ public class MemberGroup {
      */
     public void leaveGroup() {
 
-
-
         for (Entry<String, MemberInfo> entry : membershipList.entrySet()) {
             MemberInfo member = entry.getValue();
             if (member.getIsActive() && !member.getIp().equals(machineIp)) {
@@ -295,6 +292,7 @@ public class MemberGroup {
                 singleRequest(member.getIp(), "leave", machineId);
             }
         }
+
         MemberGroup.membershipList.clear();
         MemberGroup.receiveFlag = false;
         MemberGroup.rejoin = true;

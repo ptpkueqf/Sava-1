@@ -45,7 +45,7 @@ public class LeaderElection {
         } else if (aliveServers.contains(Leader3)){
             currentLeader = Leader3;
         } else {
-            return null;
+            return Leader3;
         }
 
 //        if (SDFS.curLeader != null && SDFS.curLeader != currentLeader) {

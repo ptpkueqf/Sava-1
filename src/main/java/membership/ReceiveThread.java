@@ -43,7 +43,7 @@ public class ReceiveThread extends Thread{
                 Message message = (Message) objInpStream.readObject();
 
                 IP = receivePacket.getAddress().toString();
-
+                IP = IP.substring(1);
 
                 //the following operations should be completed in another thread
                 if (MemberGroup.receiveFlag) {

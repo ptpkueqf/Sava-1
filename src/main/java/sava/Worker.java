@@ -1,10 +1,10 @@
 package sava;
 
-import membership.MemberGroup;
-import membership.MemberInfo;
+import membership.Node;
 import org.apache.log4j.Logger;
 import sdfs.FileClientThread;
 import sdfs.FileOperation;
+import sdfs.SDFS;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -28,6 +28,12 @@ public class Worker implements Runnable{
 
     private List<Message> previousMessages;
 
+    private HashMap<Integer, Vertex> previousVertices;
+
+    private  boolean havechecked = false;
+
+    private boolean checkMasterThread = true;
+
     public void run(){
 
         //Socket newsocket = null;
@@ -38,15 +44,26 @@ public class Worker implements Runnable{
             e.printStackTrace();
         }
 
-
+        boolean havesendOrNot = false;
         boolean isMasterAlive = true;
+
+
         while (true) {
             try {
 
                 String inputmess;
                 Object readObject = null;
                 try {
+
+                    checkMasterThread = true;
+                    if (!havechecked) {
+                        new Thread(new CheckMasterThread()).start();
+                    }
+
                     socket = serverSocket.accept();
+
+                    checkMasterThread = false;
+
 
                     InputStream inputStream = socket.getInputStream();
 
@@ -58,23 +75,6 @@ public class Worker implements Runnable{
                         System.out.println("finish, write solution");
 
                         writeSolution(vertices);
-
-//                        socket.close();
-//                        serverSocket.close();
-
-//                        Socket finalSocket;
-//                        if (isMasterAlive) {
-//                            finalSocket = new Socket(Master.masterIP, Master.messageport);
-//
-//                        } else {
-//                            finalSocket = new Socket(Master.standbyMaster, Master.messageport);
-//                        }
-//
-//                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(finalSocket.getOutputStream());
-//                        objectOutputStream.writeObject(vertices);
-//                        objectOutputStream.flush();
-//                        objectOutputStream.close();
-//                        finalSocket.close();
 
                         break;
                     } else {
@@ -127,8 +127,8 @@ public class Worker implements Runnable{
                 System.out.println("Size of new messages : " + newMessages.size());
 
 
-                for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                    if (entry.getValue().getIp().equals(Master.masterIP)) {
+                for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+                    if (entry.getValue().getIP().equals(Master.masterIP)) {
                         isMasterAlive = entry.getValue().getIsActive();
                     }
                 }
@@ -168,6 +168,7 @@ public class Worker implements Runnable{
 
                 //in the end of each superstep, update the previousMessages
                 previousMessages = newMessages;
+                previousVertices = vertices;
 
                 superstep += 1;
                 try {
@@ -189,19 +190,27 @@ public class Worker implements Runnable{
     private void checkMaster() {
         boolean isMasterAlive = true;
 
-        System.out.println("Begin checking master");
+        //System.out.println("Wait for checking master");
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-            if (entry.getValue().getIp().equals(Master.masterIP)) {
+        //System.out.println("Begin checking master");
+
+        for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+            //System.out.println(entry.getKey() + " " + entry.getValue().isActive + " " + (System.currentTimeMillis() - entry.getValue().lastime) + " ");
+            if (entry.getValue().getIP().equals(Master.masterIP)) {
                 isMasterAlive = entry.getValue().getIsActive();
             }
         }
 
-
+        //System.out.println("Master is :" + isMasterAlive);
 
         if (!isMasterAlive) {
             //if the master has failed, then, we send the messsages of last super step to stand by master
-            System.out.println("Master is down, begin sending messages to stand by master");
+            //System.out.println("Master is down, begin sending messages to stand by master");
             try {
                 Socket socket = new Socket(Master.standbyMaster, Standby.onetimeport);
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -212,9 +221,29 @@ public class Worker implements Runnable{
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            vertices = previousVertices;
+            havechecked = true;
         }
     }
 
+
+    private class CheckMasterThread implements Runnable {
+        public void run () {
+
+            while (checkMasterThread) {
+
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                checkMaster();
+            }
+
+        }
+    }
 
     /**
      * construct the local version of the partition of the graph

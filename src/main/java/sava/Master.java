@@ -1,10 +1,10 @@
 package sava;
 
-import membership.MemberGroup;
-import membership.MemberInfo;
+import membership.Node;
 import org.apache.log4j.Logger;
 import sdfs.FileClientThread;
 import sdfs.FileOperation;
+import sdfs.SDFS;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -41,6 +41,8 @@ public class Master implements Runnable{
 
     public static boolean restartOrNot = false;
 
+    public long startTime;
+
     public Master() {
         superstep = 0;
     }
@@ -55,37 +57,37 @@ public class Master implements Runnable{
             //read graph files and do partition
             vertices = readGraph(graphFile);
 
+            startTime = System.currentTimeMillis();
+
             System.out.println("Number of vertices :" + vertices.size());
 
             //get all the alive workers
             workers = new ArrayList<String>();
 
-
             //new MemberGroup().listMembership();
-
-            for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                MemberInfo member = entry.getValue();
-                if (member.getIsActive() && !member.getIp().equals(masterIP) && !member.getIp().equals(standbyMaster) && !member.getIp().equals(client)) {
-                    workers.add(member.getIp());
+            for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+                String member = entry.getKey();
+                if (!member.equals(masterIP) && !member.equals(standbyMaster) && !member.equals(client)) {
+                    workers.add(member);
                 }
             }
 
-
             System.out.println("Number of workers :" + workers.size());
 
-            new MemberGroup().listMembership();
-
+            //new MemberGroup().listMembership();
             //divide the graph to workers
             partition = partition(vertices, workers);
 
-
             Socket socketToStand = new Socket(standbyMaster, commandport);
+
+
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socketToStand.getOutputStream());
+            objectOutputStream.writeUTF(vertexClassName);
             objectOutputStream.writeObject(vertices);
             objectOutputStream.flush();
-            objectOutputStream.writeObject(partition);
-            objectOutputStream.flush();
-            objectOutputStream.close();
+//          objectOutputStream.writeObject(partition);
+//          objectOutputStream.flush();
+//          objectOutputStream.close();
 
             //construct the original messages
             messages = constructMessages(vertices);
@@ -93,7 +95,6 @@ public class Master implements Runnable{
             System.out.println("Number of total messages: " + messages.size() );
 
             doIterations();
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,12 +114,14 @@ public class Master implements Runnable{
 
             //before sending messages to workers, check if any worker has failed
             List<String> currentWorkers = new ArrayList<String>();
-            for (Map.Entry<String, MemberInfo> entry : MemberGroup.membershipList.entrySet()) {
-                MemberInfo member = entry.getValue();
-                if (member.getIsActive() && !member.getIp().equals(masterIP) && !member.getIp().equals(standbyMaster) && !member.getIp().equals(client)) {
-                    currentWorkers.add(member.getIp());
+            for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
+                Node member = entry.getValue();
+                if (member.getIsActive() && !member.getIP().equals(masterIP) && !member.getIP().equals(standbyMaster) && !member.getIP().equals(client)) {
+                    currentWorkers.add(member.getIP());
                 }
             }
+
+            System.out.println("172.22.147.99 is " + SDFS.alivelist.get("172.22.147.99").isActive + " current: "+currentWorkers.size() + " workers:" + workers.size());
 
             if (currentWorkers.size() < workers.size()) {
                 System.out.println("Workers size  :" + workers.size() + "  CurrentWorkers Size :" + currentWorkers.size());
@@ -162,6 +165,7 @@ public class Master implements Runnable{
                     objects.flush();
 
                     socketList.add(socketTW);
+
 //                    Thread sendThread = new Thread(new SendMessageThread(worker,restart, messagePartition, socketList));
 //                    sendThread.start();
 //                    try {
@@ -174,12 +178,6 @@ public class Master implements Runnable{
                 if (flag) {
                     restart = false;
                 }
-
-//            try {
-//                Thread.sleep(500);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
             } catch (IOException e) {
 
                 System.out.println("Send message error! Restart");
@@ -195,9 +193,7 @@ public class Master implements Runnable{
                 socketList.clear();
                 restartOrNot = false;
                 continue;
-
         }
-
 
             //clear the message list for new messages
             messages.clear();
@@ -214,7 +210,6 @@ public class Master implements Runnable{
                         System.out.println("close sockets error");
                     }
                 }
-
                 e.printStackTrace();
                 socketList.clear();
                 continue;
@@ -240,12 +235,7 @@ public class Master implements Runnable{
                     e.printStackTrace();
                 }
 
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
+                System.out.println("Calculation has been down, the total time cost is : " + (System.currentTimeMillis() - startTime) / 1000 + " seconds");
 
                 try {
                     Thread.sleep(1000);
@@ -294,46 +284,13 @@ public class Master implements Runnable{
                 for (int i = 0; i < 25; i++) {
                     System.out.println(solutionlist.get(i));
                 }
-
-                ////////////////////////////////////////////////////////
-
-//                //collect  solutions from all the workers
-//                ServerSocket serverSocket = null;
-//                try {
-//                    int size = workers.size();
-//                    serverSocket = new ServerSocket(messageport);
-//                    HashMap<Integer, Vertex>  solution = new HashMap<Integer, Vertex>();
-//
-//
-//                    while (size > 0) {
-//                        Socket socket = serverSocket.accept();
-//                        ObjectInputStream obj = new ObjectInputStream(socket.getInputStream());
-//                        HashMap<Integer, Vertex> vertices = (HashMap<Integer, Vertex>) obj.readObject();
-//                        solution.putAll(vertices);
-//                        size--;
-//                    }
-//
-//                    List<Vertex> solutionList = new ArrayList<Vertex>();
-//                    for (Map.Entry<Integer, Vertex> vertexEntry : solution.entrySet()) {
-//                        solutionList.add(vertexEntry.getValue());
-//                    }
-//
-//                    Collections.sort(solutionList);
-//
-//                    for (int i = 0; i < 25; i++) {
-//                        System.out.println(solutionList.get(i).getVertexID() + " : " + solutionList.get(i).getValue());
-//                    }
-//
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                } catch (ClassNotFoundException e) {
-//                    e.printStackTrace();
-//                }
             }
         } while (!noActivity);
     }
 
-
+    /**
+     *
+     */
     private class SolutionType implements Comparable {
 
         public double value;
