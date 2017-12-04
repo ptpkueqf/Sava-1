@@ -7,8 +7,10 @@ import sdfs.FileOperation;
 import sdfs.SDFS;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class Standby implements Runnable{
@@ -125,6 +127,10 @@ public class Standby implements Runnable{
 
 
             List<Socket> socketList = new ArrayList<Socket>();
+            List<String> tempworkers = new ArrayList<String>();
+            List<Integer> tempsize = new ArrayList<Integer>();
+
+
             //deliver messages to worker
             try {
 
@@ -137,6 +143,8 @@ public class Standby implements Runnable{
                     ObjectOutputStream objects = new ObjectOutputStream(outputStream);
 
                     System.out.println("size of messages send to worker " + worker + " is" + messagesToWorker.size());
+                    tempworkers.add(worker);
+                    tempsize.add(messagesToWorker.size());
 
                     if (restart) {
                         System.out.println("Write restart command");
@@ -174,6 +182,21 @@ public class Standby implements Runnable{
                 continue;
             }
 
+
+            System.out.println("Start iterations!");
+            System.out.println("172.22.147.99 is " + SDFS.alivelist.get("172.22.147.99").isActive + " current: "+currentWorkers.size() + " workers:" + workers.size());
+
+            for (int i = 0 ; i < tempworkers.size(); i++) {
+                try {
+                    Thread.sleep(i * 100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("size of messages send to worker " + tempworkers.get(i) +" is" + tempsize.get(i));
+                System.out.println("Write vertexClassName");
+            }
+            tempworkers.clear();
+            tempsize.clear();
 
             //clear the message list for new messages
             messages.clear();
@@ -222,45 +245,57 @@ public class Standby implements Runnable{
                     e.printStackTrace();
                 }
 
-                for (String worker : workers) {
-                    FileOperation get = new FileOperation();
-                    get.getFile(worker+"-solution", worker + "-solution");
-                }
+//                for (String worker : workers) {
+//                    FileOperation get = new FileOperation();
+//                    get.getFile(worker+"-solution", worker + "-solution");
+//                }
 
 
                 /////////////////////////////////////////////////////////
                 ArrayList<SolutionType> solutionlist = new ArrayList<SolutionType>();
 
-                for (String worker : workers) {
-                    File file = new File(FileClientThread.LOCALADDRESS + worker + "-solution");
-                    if (file.isFile() && file.exists()) {
 
-                        try {
-                            FileInputStream fis = new FileInputStream(file);
-                            //Construct BufferedReader from InputStreamReader
-                            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                File file = null;
+                try {
+                    file = new File(FileClientThread.LOCALADDRESS + InetAddress.getLocalHost().getHostAddress().toString() + "-solution");
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+                if (file.isFile() && file.exists()) {
 
-                            String line = null;
-                            while ((line = br.readLine()) != null) {
-                                if (line.startsWith("#")) {
-                                    continue;
-                                }
-                                String[] nodes = line.split("\\s+");
-                                int vertexID = Integer.parseInt(nodes[0]);
-                                double rankValue = Double.parseDouble(nodes[1]);
+                    try {
+                        FileInputStream fis = new FileInputStream(file);
+                        //Construct BufferedReader from InputStreamReader
+                        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
-                                solutionlist.add(new SolutionType(vertexID, rankValue));
+                        String line = null;
+                        while ((line = br.readLine()) != null) {
+                            if (line.startsWith("#")) {
+                                continue;
                             }
-                            br.close();
-                        }catch (IOException e) {
-                            e.printStackTrace();
+                            String[] nodes = line.split("\\s+");
+                            int vertexID = Integer.parseInt(nodes[0]);
+                            double rankValue = Double.parseDouble(nodes[1]);
+                            solutionlist.add(new SolutionType(vertexID, rankValue));
                         }
-                    } else {
-                        System.out.println("Cannot find the file");
+                        br.close();
+                    }catch (IOException e) {
+                        e.printStackTrace();
                     }
+                } else {
+                    System.out.println("Cannot find the file");
                 }
 
-                Collections.sort(solutionlist);
+
+                try {
+                    System.out.println("Organizing results:");
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("The finally results are :");
+                //Collections.sort(solutionlist);
                 for (int i = 0; i < 25; i++) {
                     System.out.println(solutionlist.get(i));
                 }

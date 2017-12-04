@@ -26,10 +26,10 @@ public class PageRankVertex extends Vertex implements Comparable{
             this.setValue(pagerank);
         }
 
-        if (superstep <= 20) {
+        if (superstep < 20) {
             List<Message> outputMessages = this.getOutputMessages();
             for (Integer i : this.getOutVertex()) {
-                outputMessages.add(new Message(this.getVertexID(), i, this.getValue()));
+                outputMessages.add(new Message(this.getVertexID(), i, this.getValue()/this.getOutVertex().size()));
             }
         }
         this.getInputMessages().clear();

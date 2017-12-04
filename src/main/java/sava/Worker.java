@@ -34,6 +34,7 @@ public class Worker implements Runnable{
 
     private boolean checkMasterThread = true;
 
+
     public void run(){
 
         //Socket newsocket = null;
@@ -46,7 +47,6 @@ public class Worker implements Runnable{
 
         boolean havesendOrNot = false;
         boolean isMasterAlive = true;
-
 
         while (true) {
             try {
@@ -63,7 +63,6 @@ public class Worker implements Runnable{
                     socket = serverSocket.accept();
 
                     checkMasterThread = false;
-
 
                     InputStream inputStream = socket.getInputStream();
 
@@ -82,7 +81,6 @@ public class Worker implements Runnable{
                         inputMessages = (List<Message>) readObject;
                     }
 
-
                 } catch (IOException e) {
                     System.out.println("Receive error, restart the worker and wait for new messages");
 
@@ -99,14 +97,20 @@ public class Worker implements Runnable{
                     continue;
                 }
 
-
                 System.out.println("UTF : " + inputmess);
                 System.out.println("get "+ inputMessages.size() + " messages from master");
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 if (inputmess.equals("restart")) {
                     System.out.println("Restart and construct vertices!");
                     vertexClassName = "PageRankVertex";
                     vertices = constructVertices(inputMessages);
+                    superstep = 0;
                 }
 
                 if (vertices == null) {
@@ -114,18 +118,10 @@ public class Worker implements Runnable{
                     vertices = constructVertices(inputMessages);
                 }
 
-
-
                 //do computing in every vertex and get new messages
                 newMessages = compute(vertices, inputMessages);
 
-//                for (Map.Entry<Integer, Vertex> vertexEntry : vertices.entrySet()) {
-//                    System.out.print("[" +vertexEntry.getValue().getVertexID() + "," + vertexEntry.getValue().getValue() + "]");
-//                }
-//                System.out.println();
-
                 System.out.println("Size of new messages : " + newMessages.size());
-
 
                 for (Map.Entry<String, Node> entry : SDFS.alivelist.entrySet()) {
                     if (entry.getValue().getIP().equals(Master.masterIP)) {
@@ -133,29 +129,26 @@ public class Worker implements Runnable{
                     }
                 }
 
-                System.out.println("Master is alive:" + isMasterAlive);
-
-
                 /////这里还要额外核查测试一下
                 try {
                     if (isMasterAlive) {
-                        System.out.println("Master is alive, begin send");
+                       // System.out.println("Master is alive, begin send");
                         //the size of newMessages decide whether do we need more iterations.
                         OutputStream outputStream = socket.getOutputStream();
                         ObjectOutputStream outObjects = new ObjectOutputStream(outputStream);
                         outObjects.writeObject(newMessages);
                         outObjects.flush();
                         outObjects.close();
-                        System.out.println("Master is alive, end send");
+                       // System.out.println("Master is alive, end send");
                     } else {
                         //send data to
-                        System.out.println("Master is dead, begin send");
+                       // System.out.println("Master is dead, begin send");
                         OutputStream outstr = socket.getOutputStream();
                         ObjectOutputStream outObjs = new ObjectOutputStream(outstr);
                         outObjs.writeObject(newMessages);
                         outObjs.flush();
                         outObjs.close();
-                        System.out.println("Master is dead, end send");
+                      //  System.out.println("Master is dead, end send");
                     }
                 } catch (IOException e) {
                     System.out.println("Send messages error, restart and waiting for new messages");
