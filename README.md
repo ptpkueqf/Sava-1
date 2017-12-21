@@ -13,10 +13,10 @@ Since our project is built based on maven, thus, you can use commnd mvn assembly
 Then, upload the jar file to all the VMs. <br>
 cd into the file directory of jar file. <br>
 Use java -jar xxx.jar master to start a master<br>
-Use java -jar xxx.jar standby to start a standby master
-use java -jar xxx.jar client to start a client and recieve you command
+Use java -jar xxx.jar standby to start a standby master<br>
+use java -jar xxx.jar client to start a client and recieve you command<br>
 use java -jar xxx.jar worker to start a worker which is the main calcualtion 
-unit.
+unit. <br>
 To start an application, you should input the class name of vertex of the 
-application and the file address of the large graph.
-Then, after calculation, it should output the top 25 vertices and their values.
+application and the file address of the large graph.<br>
+Then, after calculation, it should output the top 25 vertices and their values.<br>
