@@ -8,11 +8,15 @@
         <outputRelativeToContentRoot value="true" />
         <module name="mp2" />
         <module name="mp3" />
+        <module name="mp4" />
+        <module name="sava" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="mp2" target="1.5" />
       <module name="mp3" target="1.5" />
+      <module name="mp4" target="1.5" />
+      <module name="sava" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>

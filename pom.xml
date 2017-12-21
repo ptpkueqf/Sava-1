@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cs425</groupId>
-    <artifactId>mp4</artifactId>
+    <artifactId>sava</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <build>
@@ -15,7 +15,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>sdfs.SDFSMain</mainClass>
+                            <mainClass>application.ApplicationEntrance</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

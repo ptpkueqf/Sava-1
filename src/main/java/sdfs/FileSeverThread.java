@@ -284,6 +284,9 @@ public class FileSeverThread extends Thread {
 //            System.out.print("\ncurrent index" + index + "\n");
 
             HashSet<String> tempset = new HashSet<String>();
+            if (index < 0) {
+                index = 0;
+            }
             tempset.add(aliveservers.get(index));
             tempset.add(aliveservers.get((index + 1) % size));
             tempset.add(aliveservers.get((index + 2) % size));

@@ -129,7 +129,7 @@ public class Worker implements Runnable{
                     }
                 }
 
-                /////这里还要额外核查测试一下
+
                 try {
                     if (isMasterAlive) {
                        // System.out.println("Master is alive, begin send");
